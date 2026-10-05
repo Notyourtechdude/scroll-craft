@@ -6,7 +6,7 @@ export const BRAND = {
   email: 'info@bridgesocialuae.com',
   handle: 'bridgesocialuae',
   instagram: 'https://www.instagram.com/bridgesocialuae/',
-  site: '',                 // set to the live domain once deployed, e.g. 'https://bridgesocialuae.com/'
+  site: 'https://bridge-social-experience.netlify.app/',
   social: 'Bridge Social',
   place: 'United Arab Emirates',
 };
