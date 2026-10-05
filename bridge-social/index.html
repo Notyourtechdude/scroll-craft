@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bridge Social — Cross the Bridge</title>
+<meta name="description" content="Bridge Social connects your business to luxury brands, high-end services and top industry experts. A scroll-driven 3D journey across the bridge.">
+<meta name="theme-color" content="#12040b">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%235c0a33'/%3E%3Cpath d='M9 6h8a5 5 0 0 1 3 9 5 5 0 0 1-3 11H9z' fill='%23e8dcb5'/%3E%3C/svg%3E">
+</head>
+<body>
+<canvas id="gl" aria-hidden="true"></canvas>
+
+<div id="loader">
+  <div class="ld-inner">
+    <div class="ld-mark"><svg viewBox="0 0 64 64"><use href="#logo"/></svg></div>
+    <div class="ld-count"><span id="ld-num">0</span><i>%</i></div>
+    <div class="ld-bar"><b id="ld-bar"></b></div>
+    <p class="ld-line">Building the bridge</p>
+    <button id="ld-enter" class="btn" disabled data-cursor="Enter"><span>Enter the experience</span></button>
+    <label class="ld-snd"><input type="checkbox" id="ld-sound" checked> <span>With sound</span></label>
+  </div>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="logo" viewBox="0 0 64 64">
+    <path fill="currentColor" fill-rule="evenodd" d="M8 6h30a14 14 0 0 1 8 25.5A15 15 0 0 1 40 58H8zM18 14v13h19a6.5 6.5 0 0 0 0-13zm0 22v14h21a7 7 0 0 0 0-14z"/>
+    <path fill="currentColor" d="M20 44a4 4 0 0 1 8 0v6h-8zM30 44a4 4 0 0 1 8 0v6h-8z"/>
+  </symbol>
+</svg>
+
+<header id="hud">
+  <a class="brand" href="#" data-cursor="Top" id="brand">
+    <svg viewBox="0 0 64 64"><use href="#logo"/></svg>
+    <span><b>BRIDGE</b><i>SOCIAL</i></span>
+  </a>
+  <div class="hud-right">
+    <button id="snd" class="icon-btn" aria-label="Toggle sound" data-cursor="Sound"><span class="eq"><i></i><i></i><i></i><i></i></span></button>
+    <button id="menu-btn" class="icon-btn txt" aria-label="Open chapters" data-cursor="Menu"><span>Chapters</span><b></b></button>
+  </div>
+</header>
+
+<nav id="rail" aria-label="Chapters"></nav>
+
+<div id="hud-bottom">
+  <div class="now"><span id="now-num">01</span><i></i><span id="now-label">Arrive</span></div>
+  <div class="meter"><b id="meter"></b></div>
+  <div class="pct"><span id="pct">000</span><i>/ 100</i></div>
+</div>
+
+<div id="menu" aria-hidden="true">
+  <ol id="menu-list"></ol>
+  <p class="menu-foot">Scroll, drag, or press <kbd>↑</kbd><kbd>↓</kbd> to cross the bridge</p>
+</div>
+
+<main id="panels"></main>
+<div id="scroll-space"></div>
+
+<div id="cursor"><i></i><span></span></div>
+<div id="flash"></div>
+<div id="nogl" hidden><h1>Bridge Social</h1><p>Your browser couldn’t start the 3D experience. Reach us at <a href="mailto:info@bridgesocialuae.com">info@bridgesocialuae.com</a>.</p></div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
