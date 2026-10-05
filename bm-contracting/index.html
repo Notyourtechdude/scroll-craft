@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>BM Contracting | Build Experience</title>
+  <meta name="description" content="Scroll to build. An immersive 3D scrollytelling journey from bare ground to lights-on with BM Contracting." />
+  <meta name="theme-color" content="#04070d" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet" />
+</head>
+<body class="is-loading">
+  <canvas id="gl" aria-hidden="true"></canvas>
+
+  <main id="chapters"></main>
+
+  <header class="hud hud-top">
+    <a class="logo" href="#" aria-label="BM Contracting">
+      <svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><path d="M20 2 36 11v18L20 38 4 29V11z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 14h8a3.5 3.5 0 0 1 0 6.5H12m0 0h9a3.5 3.5 0 0 1 0 7H12z" fill="none" stroke="#ffa31a" stroke-width="2" stroke-linejoin="round" transform="translate(2 0) scale(.9)"/></svg>
+      <span>BM <b>Contracting</b></span>
+    </a>
+    <div class="hud-right">
+      <span class="phase" id="phase">Arrival</span>
+      <button id="sound" class="chip" type="button" aria-pressed="false" data-hover>Sound <i>off</i></button>
+      <a class="chip solid" id="siteLink" target="_blank" rel="noopener" data-hover>Main site ↗</a>
+    </div>
+  </header>
+
+  <nav id="rail" aria-label="Chapters"></nav>
+
+  <footer class="hud hud-bottom">
+    <div class="readout" aria-hidden="true">
+      <div><span>Progress</span><b id="rProg">000</b><u>%</u></div>
+      <div><span>Floors</span><b id="rFloor">00</b><u>/18</u></div>
+      <div><span>Elev</span><b id="rElev">+00.0</b><u>m</u></div>
+    </div>
+    <div class="hint" id="hint"><i></i><span>Scroll to build</span></div>
+    <div class="coords" id="coords" aria-hidden="true">X 000.0 · Y 000.0 · Z 000.0</div>
+  </footer>
+  <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+
+  <div id="loader">
+    <div class="ld-inner">
+      <div class="ld-mark"></div>
+      <div class="ld-num"><b id="ldNum">0</b><u>%</u></div>
+      <div class="ld-status" id="ldStatus">Initialising survey</div>
+      <button id="enter" type="button" disabled data-hover>Enter site</button>
+      <p class="ld-note">Best with sound on and headphones. Scroll, move your mouse, watch it build.</p>
+    </div>
+  </div>
+
+  <div id="nogl" hidden>
+    <h1>BM Contracting</h1>
+    <p>This experience needs WebGL. Please open it in a recent version of Chrome, Edge, Safari or Firefox.</p>
+    <a href="https://bmcontracting-baqdv9bt.manus.space/">Visit the main site</a>
+  </div>
+
+  <div id="cursor" aria-hidden="true"><i></i><b></b></div>
+  <div id="scroller"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
