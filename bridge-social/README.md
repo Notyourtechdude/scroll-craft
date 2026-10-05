@@ -18,6 +18,28 @@ toward a rising sun, and every service pillar is a 3D "station" you pass.
 | 07 | VIP Luxury Concierge | Dotted globe, Dubai → six destination arcs (one per service), a private jet flying the active route |
 | 08 | Contact | The logo reforms inside a giant gate against the sunrise; torn-paper "Contact us !" |
 
+## Instagram ↔ web
+
+Profile: https://www.instagram.com/bridgesocialuae/ (single source: `BRAND.instagram` in `src/content.js`).
+
+- **Web → Instagram:** header button, chapter menu, contact card, "See our feed" links under Social Media
+  Management and Influencer Management, and a real QR code that opens the profile: on the floating
+  ScanConnect panel in the F&B chapter and as a "Scan to follow" tile on the contact card (desktop → phone).
+- **Instagram → web:** every chapter has a deep link, so bio links, story link stickers and highlights can
+  open the journey at a specific stop. The address bar follows along as you scroll.
+
+  | Link | Opens |
+  |---|---|
+  | `/#about` | Overview |
+  | `/#marketing` | Marketing |
+  | `/#events` | Event Entertainment |
+  | `/#fnb` | F&B Advisory |
+  | `/#corporate` | Corporate Events |
+  | `/#vip` | VIP Luxury Concierge |
+  | `/#contact` | Contact |
+
+- `public/og.jpg` + Open Graph tags give a proper preview card when the site link is shared in DMs.
+
 ## Run
 
 ```bash

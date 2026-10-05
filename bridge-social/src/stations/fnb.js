@@ -1,19 +1,15 @@
 import * as THREE from 'three';
 import { U, GLSL, additive } from '../shared.js';
 import { sstep, rng } from '../util.js';
+import { qrCanvas } from '../qr.js';
+import { BRAND } from '../content.js';
 
 const OUT = [[0, 0], [1.5, 0], [1.55, .08], [1.4, .18], [.3, .3], [.14, .5], [.12, 2.6], [.3, 2.9], [1, 3.3], [1.75, 4.2], [2.05, 5.2], [2.05, 6.1], [1.9, 7], [1.6, 7.8], [1.5, 8.1]];
 const INN = [[0, 3.45], [.9, 3.7], [1.65, 4.4], [1.95, 5.3], [1.95, 6.1], [1.8, 7], [1.5, 7.8]];
 const radiusAt = (y) => { for (let i = 0; i < INN.length - 1; i++) { const a = INN[i], b = INN[i + 1]; if (y >= a[1] && y <= b[1]) return a[0] + (b[0] - a[0]) * ((y - a[1]) / (b[1] - a[1])); } return 1.5; };
 
 function qrTex() {
-  const n = 25, S = 400, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d'), r = rng(5);
-  x.fillStyle = '#12040b'; x.fillRect(0, 0, S, S); const k = (S - 40) / n; x.fillStyle = '#ead9b0';
-  const finder = (ox, oy) => { x.fillRect(20 + ox * k, 20 + oy * k, 7 * k, 7 * k); x.fillStyle = '#12040b'; x.fillRect(20 + (ox + 1) * k, 20 + (oy + 1) * k, 5 * k, 5 * k); x.fillStyle = '#ead9b0'; x.fillRect(20 + (ox + 2) * k, 20 + (oy + 2) * k, 3 * k, 3 * k); };
-  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const inF = (i < 8 && j < 8) || (i > n - 9 && j < 8) || (i < 8 && j > n - 9); if (!inF && r() > .52) x.fillRect(20 + i * k, 20 + j * k, k - 1, k - 1); }
-  x.fillStyle = '#12040b'; x.fillRect(20, 20, 8 * k, 8 * k); x.fillRect(20 + (n - 8) * k, 20, 8 * k, 8 * k); x.fillRect(20, 20 + (n - 8) * k, 8 * k, 8 * k); x.fillStyle = '#ead9b0';
-  finder(0, 0); finder(n - 7, 0); finder(0, n - 7);
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  const t = new THREE.CanvasTexture(qrCanvas(BRAND.instagram, { size: 512 })); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
 }
 
 export function createFnb() {
@@ -72,13 +68,13 @@ export function createFnb() {
   ringL.rotation.x = Math.PI / 2; orb.add(ringL); orb.position.y = 4.2; orb.rotation.z = .18;
 
   // ScanConnect panel
-  const qr = new THREE.Mesh(new THREE.PlaneGeometry(4, 4), new THREE.ShaderMaterial({
+  const qr = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.ShaderMaterial({
     transparent: true, uniforms: { ...U, uMap: { value: qrTex() }, uA: { value: 0 } },
     vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-    fragmentShader: `uniform sampler2D uMap; uniform float uTime,uA; varying vec2 vUv; void main(){ vec4 t=texture2D(uMap,vUv); float sc=fract(uTime*.5); float line=exp(-(vUv.y-sc)*(vUv.y-sc)*484.);
-      vec3 c=t.rgb+vec3(1.,.4,.55)*line*2.; float edge=step(.02,vUv.x)*step(vUv.x,.98)*step(.02,vUv.y)*step(vUv.y,.98); gl_FragColor=vec4(c,uA*(.25+t.r*.75)*edge); }`,
+    fragmentShader: `uniform sampler2D uMap; uniform float uTime,uA; varying vec2 vUv; void main(){ vec4 t=texture2D(uMap,vUv); float sc=fract(uTime*.5); float line=exp(-(vUv.y-sc)*(vUv.y-sc)*2200.);
+      vec3 c=t.rgb*.72+vec3(1.,.3,.5)*line*.6; gl_FragColor=vec4(c,uA); }`,
   }));
-  qr.position.set(-7.5, 7.5, 3); qr.rotation.y = .5; g.add(qr);
+  qr.position.set(3.4, 3.2, 4.5); g.add(qr);
   const pl = new THREE.PointLight('#ff9a3c', 240, 30, 2); pl.position.set(3, 8, 6); g.add(pl);
 
   return {
@@ -93,8 +89,8 @@ export function createFnb() {
       steam.material.uniforms.uAmt.value = sstep(.1, .6, local);
       glass.rotation.y = t * .1; wine.rotation.y = t * .1; surf.rotation.z = t * .4;
       beads.forEach((b, i) => { const an = (i / 5) * 6.2832 + t * .22; b.position.set(Math.cos(an) * 6.6, 0, Math.sin(an) * 6.6); const act = Math.max(0, 1 - Math.abs(a - i - .5) * 1.2); b.scale.setScalar(.7 + act * 1.2); });
-      qr.material.uniforms.uA.value += (sstep(.58, .72, local) * (1 - sstep(.78, .86, local)) - qr.material.uniforms.uA.value) * .1;
-      qr.position.y = 7.5 + Math.sin(t) * .25; qr.lookAt(ctx.camera.position);
+      qr.material.uniforms.uA.value += (sstep(.57, .62, local) * (1 - sstep(.8, .85, local)) - qr.material.uniforms.uA.value) * .1;
+      qr.position.y = 3.2 + Math.sin(t) * .15; qr.lookAt(ctx.camera.position);
     },
   };
 }

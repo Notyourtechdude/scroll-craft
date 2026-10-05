@@ -89,6 +89,12 @@ async function boot() {
   const ui = buildUI(lenis, goTo);
   $('brand').onclick = (e) => { e.preventDefault(); goTo(0); };
 
+  // deep links: #marketing, #events, #fnb, #corporate, #vip, #contact (for Instagram bio / story links)
+  const ids = CHAPTERS.map((c) => c.id);
+  const fromHash = () => ids.indexOf((location.hash || '').slice(1).toLowerCase());
+  let hashAct = -1;
+  addEventListener('hashchange', () => { const i = fromHash(); if (i >= 0 && S.started) goTo(i); });
+
   // ----- sizing
   const resize = () => {
     const w = innerWidth, h = innerHeight; renderer.setPixelRatio(dpr); renderer.setSize(w, h, false);
@@ -134,6 +140,7 @@ async function boot() {
   ldEnter.onclick = async () => {
     S.started = true; $('loader').classList.add('gone'); lenis.start(); lenis.scrollTo(0, { immediate: true });
     if ($('ld-sound').checked) setSnd(true);
+    const deep = fromHash(); if (deep > 0) setTimeout(() => goTo(deep), 1400);
     gsap.fromTo(S, { assemble: 0, enter: 0 }, { assemble: 1, enter: 1, duration: 4.2, ease: 'power3.out' });
     gsap.fromTo('#flash', { opacity: .9 }, { opacity: 0, duration: 2.2, ease: 'power2.out' });
   };
@@ -189,6 +196,7 @@ async function boot() {
 
     // ui + stations
     const act = ui.update(S.p); chapterNow = act;
+    if (S.started && act !== hashAct && S.enter > .99) { hashAct = act; try { history.replaceState(null, '', act ? '#' + ids[act] : location.pathname + location.search); } catch {} }
     stations.forEach((s) => {
       if (!s || !s.g.visible) return;
       const pn = ui.panels[s.i], local = pn.local ?? pn.t;

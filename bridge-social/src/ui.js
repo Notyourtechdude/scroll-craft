@@ -1,15 +1,18 @@
 import { CHAPTERS, BRAND, SERVICE_COUNT } from './content.js';
 import { clamp, sstep, lerp } from './util.js';
+import { qrCanvas } from './qr.js';
 
 const ICON = {
   phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>',
   mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
   pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.800 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+  qr: '',
   ig: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></svg>',
   at: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>',
 };
 
 const pad = (n) => String(n).padStart(2, '0');
+const esc = (s) => s.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 
 export function buildUI(lenis, goTo) {
   const panelsEl = document.getElementById('panels');
@@ -32,11 +35,12 @@ export function buildUI(lenis, goTo) {
           <li><a href="https://wa.me/${BRAND.phone.replace('+', '')}" target="_blank" rel="noopener" data-cursor="Chat">${ICON.phone}${BRAND.phoneDisplay} · WhatsApp</a></li>
           <li><a href="mailto:${BRAND.email}" data-cursor="Write">${ICON.mail}${BRAND.email}</a></li>
           <li><span>${ICON.pin}${BRAND.place}</span></li>
-          <li><span>${ICON.ig}${BRAND.handle}</span></li>
+          <li><a href="${BRAND.instagram}" target="_blank" rel="noopener" data-cursor="Follow">${ICON.ig}@${BRAND.handle}</a></li>
           <li><span>${ICON.at}${BRAND.social} · TikTok · Facebook · LinkedIn</span></li>
         </ul>
-        <div class="cta" data-r><a class="btn solid" href="mailto:${BRAND.email}" data-cursor="Write"><span>Start a conversation</span></a><button class="btn" id="again" data-cursor="Again"><span>Cross again</span></button></div>
-        <p class="thanks" data-r>Thank you.</p></div></div>`;
+        <div class="cta" data-r><a class="btn solid" href="mailto:${BRAND.email}" data-cursor="Write"><span>Start a conversation</span></a><a class="btn ig-btn" href="${BRAND.instagram}" target="_blank" rel="noopener" data-cursor="Follow"><span>${ICON.ig}Follow on Instagram</span></a><button class="btn" id="again" data-cursor="Again"><span>Cross again</span></button></div>
+        <p class="thanks" data-r>Thank you.</p></div>
+        <a class="scan" data-r href="${BRAND.instagram}" target="_blank" rel="noopener" data-cursor="Follow"><canvas data-qr width="240" height="240" aria-label="QR code for @${BRAND.handle} on Instagram"></canvas><span>Scan to follow<br><b>@${BRAND.handle}</b></span></a></div>`;
     } else {
       html = `<div class="col"><div class="kicker"><b>${pad(i)}</b> ${c.kicker}</div><h2 data-r>${c.title}</h2><p class="tag" data-r>${c.tag}</p>
         <ul class="list${c.items.length > 6 ? ' dense' : ''}" data-r>${c.items.map((it, k) => `<li data-k="${k}"><small>${pad(k + 1)}</small>${it[0]}</li>`).join('')}</ul>
@@ -45,6 +49,11 @@ export function buildUI(lenis, goTo) {
     el.innerHTML = html; panelsEl.appendChild(el);
     return { c, el, rev: [...el.querySelectorAll('[data-r]')], lis: [...el.querySelectorAll('.list li')], detail: el.querySelector('[data-detail]'), last: -1, counts: [...el.querySelectorAll('[data-count]')] };
   });
+
+  // Instagram: header button, menu link, contact QR
+  const igBtn = document.getElementById('ig'); if (igBtn) { igBtn.href = BRAND.instagram; igBtn.querySelector('[data-ic]').innerHTML = ICON.ig; }
+  const igMenu = document.getElementById('ig-menu'); if (igMenu) { igMenu.href = BRAND.instagram; igMenu.querySelector('[data-ic]').innerHTML = ICON.ig; }
+  document.querySelectorAll('canvas[data-qr]').forEach((cv) => { cv.getContext('2d').drawImage(qrCanvas(BRAND.instagram, { size: 240 }), 0, 0); });
 
   // scale each text column down when it would not fit the viewport height
   const fit = () => {
@@ -94,7 +103,7 @@ export function buildUI(lenis, goTo) {
         if (pn.lis.length) {
           const n = pn.lis.length, k = clamp(Math.floor(sstep(.16, .9, t) * n * .999), 0, n - 1);
           if (k !== pn.last) { pn.last = k; pn.lis.forEach((l, j) => l.classList.toggle('act', j === k));
-            pn.detail.classList.add('sw'); setTimeout(() => { pn.detail.textContent = pn.c.items[k][1]; pn.detail.classList.remove('sw'); }, 160); }
+            pn.detail.classList.add('sw'); setTimeout(() => { pn.detail.innerHTML = esc(pn.c.items[k][1]) + (pn.c.items[k][2] ? ` <a class="ig-link" href="${BRAND.instagram}" target="_blank" rel="noopener" data-cursor="Follow">${ICON.ig}<span>${esc(pn.c.items[k][2])}</span></a>` : ''); pn.detail.classList.remove('sw'); }, 160); }
           pn.activeIndex = k; pn.local = sstep(.16, .9, t);
         }
         pn.t = t;
