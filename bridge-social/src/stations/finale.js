@@ -3,14 +3,14 @@ import { U, additive, CREAM } from '../shared.js';
 import { rng, isMobile } from '../util.js';
 
 /** Particle logo: scatters into mist or condenses into the B-and-bridge mark. */
-export function createLogoCloud(pts, { size = 16, seed = 3, count } = {}) {
+export function createLogoCloud(pts, { size = 16, seed = 3, count, bright = .8, dot = 1, solid = false } = {}) {
   const N = count || Math.floor(pts.length / 2), R = rng(seed);
   const tg = new Float32Array(N * 3), rd = new Float32Array(N * 4);
   for (let i = 0; i < N; i++) { const k = (i % (pts.length / 2)) * 2; tg.set([pts[k] * size, pts[k + 1] * size, (R() - .5) * .6], i * 3); rd.set([R(), R(), R(), R()], i * 4); }
   const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(tg, 3)); geo.setAttribute('aR', new THREE.BufferAttribute(rd, 4));
   const uForm = { value: 0 }, uMouse = { value: new THREE.Vector3(999, 999, 0) };
-  const mat = new THREE.ShaderMaterial(additive({
-    uniforms: { ...U, uForm, uMouse, uSize: { value: size * .011 } },
+  const mat = new THREE.ShaderMaterial((solid ? (o) => Object.assign({ transparent: true, depthWrite: false }, o) : additive)({
+    uniforms: { ...U, uForm, uMouse, uSize: { value: size * .011 * dot }, uBright: { value: bright } },
     vertexShader: `uniform float uTime,uScale,uForm,uSize,uPulse; uniform vec3 uMouse; attribute vec4 aR; varying float vA; varying float vC;
       float ez(float x){x=clamp(x,0.,1.);return x*x*x*(x*(x*6.-15.)+10.);}
       void main(){
@@ -23,8 +23,8 @@ export function createLogoCloud(pts, { size = 16, seed = 3, count } = {}) {
         vec4 mv=modelViewMatrix*vec4(p,1.); gl_Position=projectionMatrix*mv;
         gl_PointSize=clamp(uSize*(.7+aR.y*.9+push)*uScale/-mv.z,1.,34.);
         vA=(.35+.65*(.5+.5*sin(uTime*2.+aR.x*60.)))*(.45+.55*f)*smoothstep(.5,6.,-mv.z); vC=aR.z+push; }`,
-    fragmentShader: `uniform vec3 uAccent; varying float vA; varying float vC; void main(){float d=length(gl_PointCoord-.5);float a=smoothstep(.5,0.,d);
-      vec3 c=mix(vec3(1.,.88,.62),uAccent*1.5+vec3(.3),smoothstep(.55,1.,vC)); gl_FragColor=vec4(c*a*vA*.8,a*vA);}`,
+    fragmentShader: `uniform vec3 uAccent; uniform float uBright; varying float vA; varying float vC; void main(){float d=length(gl_PointCoord-.5);float a=smoothstep(.5,0.,d);
+      vec3 c=mix(vec3(1.,.88,.62),uAccent*1.5+vec3(.3),smoothstep(.55,1.,vC)); ${solid ? 'gl_FragColor=vec4(c*uBright,smoothstep(.0,.35,a)*vA);' : 'gl_FragColor=vec4(c*a*vA*uBright,a*vA);'}}`,
   }));
   const pts3 = new THREE.Points(geo, mat); pts3.frustumCulled = false;
   return { points: pts3, uForm, uMouse };
@@ -34,8 +34,8 @@ export function createLogoCloud(pts, { size = 16, seed = 3, count } = {}) {
 export function createGate() {
   const g = new THREE.Group();
   const mk = (r, tube, k) => { const m = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 10, 120, Math.PI), new THREE.MeshBasicMaterial({ color: new THREE.Color('#ead9b0').multiplyScalar(k) })); m.position.y = 1; return m; };
-  g.add(mk(9, .28, 2.2), mk(12.5, .16, 1.6), mk(16, .1, 1.2));
-  for (const s of [-1, 1]) for (const [r, h] of [[9, 1], [12.5, 1], [16, 1]]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(.14, .14, 3, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color('#ead9b0').multiplyScalar(1.6) })); c.position.set(s * r, -.5, 0); g.add(c); }
+  g.add(mk(9.5, .14, 1.15), mk(12.5, .09, .9), mk(16, .06, .7));
+  for (const s of [-1, 1]) for (const [r, h] of [[9, 1], [12.5, 1], [16, 1]]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(.14, .14, 3, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color('#ead9b0').multiplyScalar(.9) })); c.position.set(s * r, -.5, 0); g.add(c); }
   // sun
   const sunMat = new THREE.ShaderMaterial(additive({
     uniforms: { ...U, uK: { value: 0 } },
@@ -43,6 +43,6 @@ export function createGate() {
     fragmentShader: `uniform float uK,uTime; uniform vec3 uAccent; varying vec2 vUv; void main(){ vec2 p=vUv-.5; float r=length(p)*2.; float core=smoothstep(.13,.1,r); float halo=exp(-r*6.); float rays=pow(abs(sin(atan(p.y,p.x)*14.+uTime*.08)),8.)*exp(-r*4.)*.35;
       vec3 c=vec3(1.,.93,.75)*core*2.2+mix(vec3(1.,.5,.4),uAccent,.4)*halo*1.1+vec3(1.,.8,.55)*rays; gl_FragColor=vec4(c*uK,(core+halo+rays)*uK); }`,
   }));
-  const sun = new THREE.Mesh(new THREE.PlaneGeometry(320, 320), sunMat); sun.position.set(0, 8, -130); sun.renderOrder = -5; g.add(sun);
+  const sun = new THREE.Mesh(new THREE.PlaneGeometry(320, 320), sunMat); sun.position.set(0, -4, -150); sun.renderOrder = -5; g.add(sun);
   return { group: g, sunMat };
 }

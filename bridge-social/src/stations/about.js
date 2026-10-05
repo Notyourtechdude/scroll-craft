@@ -5,7 +5,7 @@ const lathe = (pts, seg = 64) => new THREE.LatheGeometry(pts.map(([x, y]) => new
 
 export function createAbout() {
   const g = new THREE.Group(); g.userData.focusY = 5;
-  const mat = new THREE.MeshStandardMaterial({ color: '#e0a8c6', metalness: 1, roughness: .13, envMapIntensity: 2.1 });
+  const mat = new THREE.MeshStandardMaterial({ color: '#ead0dc', metalness: 1, roughness: .16, envMapIntensity: 1.6 });
   const king = new THREE.Group();
   king.add(new THREE.Mesh(lathe([[0, 0], [2.4, 0], [2.5, .2], [2.2, .5], [1.6, 1], [1.25, 1.7], [.95, 2.8], [.8, 3.8], [1, 4.1], [1.5, 4.3], [1.55, 4.6], [1.2, 4.75], [1.7, 5.6], [1.95, 6.5], [1.8, 6.8], [0, 6.8]]), mat));
   const bx = (w, h, d, y) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.y = y; king.add(m); };
@@ -32,7 +32,7 @@ export function createAbout() {
   }));
   floor.rotation.x = -Math.PI / 2; floor.position.y = -.02; g.add(floor);
 
-  const glow = new THREE.PointLight('#ff7aa8', 260, 30, 2); glow.position.set(3, 6, 6); g.add(glow);
+  const glow = new THREE.PointLight('#ff9cbd', 110, 30, 2); glow.position.set(3, 6, 6); g.add(glow);
   const halo = new THREE.Mesh(new THREE.TorusGeometry(4.6, .05, 8, 120), new THREE.MeshBasicMaterial({ color: new THREE.Color('#ead9b0').multiplyScalar(2.4) }));
   halo.position.y = 9.4; halo.rotation.x = Math.PI / 2; g.add(halo);
   const halo2 = halo.clone(); halo2.scale.setScalar(.7); halo2.position.y = 9.9; g.add(halo2);
@@ -48,7 +48,7 @@ export function createAbout() {
       king.rotation.y = t * .18 + local * 2.4; king.position.y = Math.sin(t * .8) * .12 + 1.2;
       halo.rotation.z = t * .3; halo2.rotation.z = -t * .5; halo.position.y = 9.4 + Math.sin(t) * .15 + 1.2; halo2.position.y = 9.9 + Math.sin(t * 1.2) * .15 + 1.2;
       pawns.forEach((p, i) => { p.position.y = Math.sin(t * .9 + i) * .15; p.rotation.y = t * .3 + i; });
-      glow.intensity = 260 + Math.sin(t * 2) * 60;
+      glow.intensity = 110 + Math.sin(t * 2) * 25;
     },
   };
 }

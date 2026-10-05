@@ -46,6 +46,19 @@ export function buildUI(lenis, goTo) {
     return { c, el, rev: [...el.querySelectorAll('[data-r]')], lis: [...el.querySelectorAll('.list li')], detail: el.querySelector('[data-detail]'), last: -1, counts: [...el.querySelectorAll('[data-count]')] };
   });
 
+  // scale each text column down when it would not fit the viewport height
+  const fit = () => {
+    const avail = innerHeight - (innerWidth < 860 ? 150 : 160);
+    panels.forEach((pn) => {
+      const col = pn.el.querySelector('.col'); if (!col) return;
+      col.style.transform = ''; const h = col.offsetHeight, s = Math.min(1, avail / h);
+      const right = pn.el.classList.contains('right'), bottom = pn.c.id === 'intro' || pn.c.id === 'contact' || innerWidth < 860;
+      col.style.transformOrigin = `${right ? '100%' : pn.c.id === 'contact' ? '50%' : '0'} ${bottom ? '100%' : '50%'}`;
+      if (s < 1) col.style.transform = `scale(${s.toFixed(3)})`;
+    });
+  };
+  fit(); addEventListener('resize', fit); document.fonts?.ready.then(fit);
+
   // rail + menu
   const rail = document.getElementById('rail'), menuList = document.getElementById('menu-list'), menu = document.getElementById('menu');
   const mid = (c) => (c.range[0] + c.range[1]) / 2;

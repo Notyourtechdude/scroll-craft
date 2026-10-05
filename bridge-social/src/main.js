@@ -25,7 +25,7 @@ const setLoad = (v) => { loadPct = Math.max(loadPct, v); ldNum.textContent = Mat
 const tick = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
 
 // chapter keyframes: progress -> fractional chapter index (camera station along the bridge)
-const KEYS = [[0, -0.5], [0.04, 0], [0.135, 1], [0.295, 2], [0.465, 3], [0.60, 4], [0.725, 5], [0.84, 6], [0.945, 7], [1, 7.2]];
+const KEYS = [[0, -0.5], [0.04, 0], [0.135, 1], [0.295, 2], [0.465, 3], [0.60, 4], [0.725, 5], [0.84, 6], [0.935, 6.85], [1, 7.0]];
 function idxOf(p) {
   for (let i = 0; i < KEYS.length - 1; i++) {
     const [p0, i0] = KEYS[i], [p1, i1] = KEYS[i + 1];
@@ -34,10 +34,10 @@ function idxOf(p) {
   return KEYS[KEYS.length - 1][1];
 }
 // per-chapter art direction, blended by fractional index
-const FOG = ['#1a0613', '#220718', '#2a0820', '#2a0e12', '#2a1006', '#0a1424', '#241810', '#3a1020'].map((c) => new THREE.Color(c));
+const FOG = ['#1a0613', '#220718', '#2a0820', '#2a0e12', '#2a1006', '#0a1424', '#241810', '#1c0611'].map((c) => new THREE.Color(c));
 const FOGD = [0.0085, 0.0085, 0.0068, 0.0085, 0.0105, 0.0075, 0.0068, 0.0042];
 const ACC = CHAPTERS.map((c) => new THREE.Color(c.accent || '#d4476f'));
-const BLOOM = [.5, .55, .6, .62, .55, .55, .55, .7];
+const BLOOM = [.5, .55, .6, .62, .55, .55, .55, .45];
 
 async function boot() {
   const canvas = $('gl');
@@ -75,8 +75,8 @@ async function boot() {
   setLoad(62); await tick();
 
   // ----- logo clouds + gate
-  const intro = createLogoCloud(logoPts, { size: 22, seed: 3 }); intro.points.position.set(0, 7.5, -6); scene.add(intro.points);
-  const fin = createLogoCloud(logoPts, { size: 17, seed: 9 }); fin.points.position.set(0, 9.5, zOf(7) - 30); scene.add(fin.points);
+  const intro = createLogoCloud(logoPts, { size: 22, seed: 3, bright: .62 }); intro.points.position.set(0, 7.5, -6); scene.add(intro.points);
+  const fin = createLogoCloud(logoPts, { size: 9, seed: 9, bright: .78, dot: 1.2, solid: true }); fin.points.position.set(0, 10.2, zOf(7) - 26); scene.add(fin.points);
   const gate = createGate(); gate.group.position.set(0, 0, zOf(7) - 30); scene.add(gate.group);
   setLoad(78); await tick();
 
@@ -162,12 +162,14 @@ async function boot() {
 
     // camera rig
     const z = zOf(idx), enterOff = (1 - S.enter) * 18 * (idx < .3 ? 1 : 0);
-    camPos.set(Math.sin(idx * 1.1) * 1.6 + S.mx * .9, 3.5 + Math.sin(idx * .8) * .5 + S.my * .35 + Math.sin(time * .5) * .06, z + enterOff);
+    const calm = 1 - sstep(6.2, 6.9, idx);
+    camPos.set(Math.sin(idx * 1.1) * 1.6 * calm + S.mx * .9, 3.5 + Math.sin(idx * .8) * .5 + S.my * .35 + Math.sin(time * .5) * .06, z + enterOff);
     camera.position.copy(camPos);
     const aheadY = 3.7 + S.my * .8;
     tmp.set(camPos.x * .2 + S.mx * 2.4, aheadY, z - 30 - Math.abs(S.vel) * 6);
     // intro: look at the logo, then release
     const wIntro = 1 - sstep(-.5, .02, idx); fp.set(0, 7.5, -6); tmp.lerp(fp, wIntro * .9);
+    fp.set(0, 4.2, fin.points.position.z); tmp.lerp(fp, 1 - calm);
     // station focus
     let st = null;
     stations.forEach((s) => {
@@ -204,11 +206,11 @@ async function boot() {
       ray.setFromCamera(mouseNDC, camera); plane.constant = -zz; if (ray.ray.intersectPlane(plane, hit)) c.uMouse.value.set(hit.x - pos.x, hit.y - pos.y, 0);
     }
     // gate + sun
-    gate.sunMat.uniforms.uK.value = sstep(5.6, 7.0, idx) * .5;
+    gate.sunMat.uniforms.uK.value = sstep(5.6, 7.0, idx) * .18;
     gate.group.visible = idx > 5;
 
     // world + post
-    const sun = sstep(6.0, 7.2, idx) * .62;
+    const sun = sstep(6.0, 7.0, idx) * .22;
     world.update(camera, sun, mixI(FOGD), fogC);
     post.bloom.strength = mixI(BLOOM) + Math.abs(S.vel) * .25 + U.uPulse.value * .5 + sun * .2;
     post.fx.uniforms.uVel.value = S.vel;

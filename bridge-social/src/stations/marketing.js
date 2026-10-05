@@ -21,8 +21,8 @@ function cardTex(i, title, accent) {
   x.globalAlpha = 1; x.strokeStyle = 'rgba(234,217,176,.5)'; x.lineWidth = 2; x.beginPath(); x.roundRect(6, 6, W - 12, H - 12, 26); x.stroke();
   x.fillStyle = '#ead9b0'; x.font = '300 150px "Cormorant Garamond", serif'; x.textBaseline = 'alphabetic';
   x.fillText(String(i + 1).padStart(2, '0'), 44, 170);
-  x.font = '500 34px "Space Grotesk Variable", sans-serif'; x.fillText(title.toUpperCase(), 44, 330);
-  x.font = '400 18px "Space Grotesk Variable", sans-serif'; x.fillStyle = 'rgba(234,217,176,.6)'; x.fillText('BRIDGE SOCIAL · MARKETING', 44, 365);
+  x.font = '600 32px "Manrope Variable", sans-serif'; x.fillText(title.toUpperCase(), 44, 330);
+  x.font = '400 18px "Manrope Variable", sans-serif'; x.fillStyle = 'rgba(234,217,176,.6)'; x.fillText('BRIDGE SOCIAL · MARKETING', 44, 365);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
 }
 
