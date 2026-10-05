@@ -36,7 +36,7 @@ nav a{font:500 11px var(--sans);letter-spacing:.24em;text-transform:uppercase;te
 /* 1 HERO */
 #hero{height:320vh}
 #hero .stick{display:grid;place-items:center}
-.portrait{height:100svh;width:auto;max-width:none;will-change:transform;transform:scale(1)}
+.portrait{height:100svh;width:100vw;max-width:none;object-fit:contain;object-position:50% 50%;-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);will-change:transform;transform:scale(1)}
 .hero-name{position:absolute;top:50%;font:900 clamp(64px,15vw,260px)/.82 var(--display);letter-spacing:-.01em;text-transform:uppercase;white-space:nowrap;will-change:transform,opacity;opacity:0;mix-blend-mode:difference;color:#fff;pointer-events:none}
 .hero-name.l{left:var(--pad)}
 .hero-name.r{right:var(--pad)}
@@ -57,7 +57,7 @@ nav a{font:500 11px var(--sans);letter-spacing:.24em;text-transform:uppercase;te
 .manifesto-sub{margin-top:36px;font:italic 400 clamp(18px,2vw,26px)/1.4 var(--serif);color:var(--mute);max-width:46ch}
 
 /* 3 BRAND RAIL */
-#rail{height:420vh}
+#rail{height:560vh}
 #rail .stick{display:flex;flex-direction:column;justify-content:center}
 .rail-head{padding:0 var(--pad);margin-bottom:5vh;display:flex;justify-content:space-between;align-items:flex-end}
 .rail-head h2{font:900 clamp(40px,7vw,110px)/.9 var(--display);text-transform:uppercase}
@@ -81,10 +81,10 @@ nav a{font:500 11px var(--sans);letter-spacing:.24em;text-transform:uppercase;te
 /* 5 FACE CHAPTERS */
 #story{position:relative;display:grid;grid-template-columns:1fr 1fr}
 .face{position:sticky;top:0;height:100svh;overflow:hidden}
-.face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:68% 34%;transform-origin:68% 34%;transform:scale(1.5);transition:transform 1.4s cubic-bezier(.2,.7,.1,1),object-position 1.4s cubic-bezier(.2,.7,.1,1),filter 1s;filter:grayscale(1) contrast(1.1)}
-.face[data-step="1"] img{transform:scale(2.8);transform-origin:62% 33%;object-position:62% 33%}
-.face[data-step="2"] img{transform:scale(2.2);transform-origin:80% 66%;object-position:80% 66%}
-.face[data-step="3"] img{transform:scale(1.05);object-position:60% 50%;transform-origin:50% 50%}
+.face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:46% 36%;transform-origin:46% 36%;transform:scale(1.5);transition:transform 1.4s cubic-bezier(.2,.7,.1,1),object-position 1.4s cubic-bezier(.2,.7,.1,1),filter 1s;filter:grayscale(1) contrast(1.1)}
+.face[data-step="1"] img{transform:scale(2.6);transform-origin:45% 28%;object-position:45% 28%}
+.face[data-step="2"] img{transform:scale(2.2);transform-origin:50% 72%;object-position:50% 72%}
+.face[data-step="3"] img{transform:scale(1.05);object-position:50% 50%;transform-origin:50% 50%}
 .face::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 60%,var(--bg))}
 .chapters{padding:0 var(--pad) 0 4vw}
 .chap{min-height:100svh;display:flex;flex-direction:column;justify-content:center;max-width:34em;opacity:.25;transition:opacity .5s}
@@ -104,6 +104,7 @@ nav a{font:500 11px var(--sans);letter-spacing:.24em;text-transform:uppercase;te
 footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:10vh;color:var(--mute);font:400 12px var(--sans)}
 
 @media (max-width:820px){
+  .portrait{object-fit:cover;object-position:46% 40%;-webkit-mask-image:none;mask-image:none}
   .grid{grid-template-columns:1fr 1fr}
   #story{display:block}
   .rail-head{flex-direction:column;align-items:flex-start;gap:12px}
@@ -131,7 +132,7 @@ footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin
 <!-- 1 HERO -->
 <section class="pin" id="hero" data-scrub>
   <div class="stick">
-    <img class="portrait" id="portrait" src="assets/nader-elite.webp" alt="Black and white portrait of Nader Ayoub, split by the word ELITE" fetchpriority="high">
+    <img class="portrait" id="portrait" src="assets/nader-elite-wide.webp" alt="Black and white portrait of Nader Ayoub, split by the word ELITE" fetchpriority="high">
     <div class="hero-name l" id="nameL">Nader</div>
     <div class="hero-name r" id="nameR">Ayoub</div>
     <div class="eyebrow hero-top">Portfolio · UAE</div>
@@ -159,9 +160,12 @@ footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin
       <div class="eyebrow">Brands distributed<br>from Italy to the UAE</div>
     </div>
     <div class="track" id="track">
-      <article class="card"><span class="ghost">K</span><span class="no">01 / 03</span><div><h3>KYO</h3><p>Premium Italian haircare, made for the professional chair.</p></div></article>
-      <article class="card"><span class="ghost">F</span><span class="no">02 / 03</span><div><h3>FreeLimix</h3><p>Italian hair care built for stylists who demand more.</p></div></article>
-      <article class="card"><span class="ghost">G</span><span class="no">03 / 03</span><div><h3>Gentlemen’s<br>Hair Club</h3><p>Grooming for the modern man, from the barbershop to the high-end salon.</p></div></article>
+      <article class="card"><span class="ghost">E</span><span class="no">01 / 06</span><div><h3>Elite</h3><p>Elite Professional itself: the house that selects, imports and stands behind every name on this list.</p></div></article>
+      <article class="card"><span class="ghost">3</span><span class="no">02 / 06</span><div><h3>3ME</h3><p>A house in the Elite Professional portfolio, chosen for the professional chair.</p></div></article>
+      <article class="card"><span class="ghost">K</span><span class="no">03 / 06</span><div><h3>KYO</h3><p>Premium Italian haircare, made for the professional chair.</p></div></article>
+      <article class="card"><span class="ghost">F</span><span class="no">04 / 06</span><div><h3>FreeLimix</h3><p>Italian hair care built for stylists who demand more.</p></div></article>
+      <article class="card"><span class="ghost">L</span><span class="no">05 / 06</span><div><h3>LOGEVY</h3><p>A house in the Elite Professional portfolio, chosen for the professional chair.</p></div></article>
+      <article class="card"><span class="ghost">G</span><span class="no">06 / 06</span><div><h3>Gentlemen’s<br>Hair Club</h3><p>Grooming for the modern man, from the barbershop to the high-end salon.</p></div></article>
       <article class="card end"><span class="no">Your chair next</span><div><h3>Stock<br>the best</h3><p>Barbershops and men’s salons across the UAE.</p><a href="https://eliteprofessionaluae.com/" target="_blank" rel="noopener">Visit the shop ↗</a></div></article>
     </div>
   </div>
@@ -173,7 +177,7 @@ footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin
   <div class="grid">
     <div><div class="n"><span data-count="2001" data-from="1900">2001</span></div><div class="l">Year Elite Professional began</div></div>
     <div><div class="n"><span data-count="25" data-plus="+">25+</span></div><div class="l">Years serving the UAE</div></div>
-    <div><div class="n"><span data-count="3">3</span></div><div class="l">Signature Italian brands</div></div>
+    <div><div class="n"><span data-count="6">6</span></div><div class="l">Houses under one name</div></div>
     <div><div class="n">IT→AE</div><div class="l">Milan craft, Emirates chairs</div></div>
   </div>
 </section>
@@ -181,7 +185,7 @@ footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin
 <!-- 5 STORY -->
 <section id="story">
   <div class="face" id="face" data-step="0">
-    <img src="assets/nader-elite.webp" alt="" aria-hidden="true">
+    <img src="assets/nader-elite-wide.webp" alt="" aria-hidden="true">
   </div>
   <div class="chapters" id="chapters">
     <div class="chap on" data-step="0">
