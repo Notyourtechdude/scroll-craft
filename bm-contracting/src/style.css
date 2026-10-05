@@ -24,7 +24,7 @@ body.is-loading { overflow: hidden; }
 
 /* ------------------------------------------------------------ HUD */
 .hud { position: fixed; left: 0; right: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; padding: var(--gut); pointer-events: none; font-family: var(--m); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; opacity: 0; transition: opacity 1.2s ease .6s; }
-body.is-live .hud, body.is-live #rail { opacity: 1; }
+body.hud-on .hud, body.hud-on #rail { opacity: 1; }
 .hud > * { pointer-events: auto; }
 .hud-top { top: 0; mix-blend-mode: normal; }
 .hud-bottom { bottom: 0; align-items: flex-end; padding-bottom: calc(var(--gut) + 6px); }
@@ -147,3 +147,29 @@ h2 { font-weight: 700; font-size: clamp(36px, 5vw, 88px); line-height: .98; lett
 @media (prefers-reduced-motion: reduce) {
   .hint i, #enter:not(:disabled), .ld-mark::after { animation: none; }
 }
+
+/* ------------------------------------------------------------ cinematic intro */
+.ld-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+.ld-btns #enter { margin-top: 0; }
+#enterSound { padding: 16px 28px; border: 1px solid var(--line); border-radius: 99px; font-family: var(--m); font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--mute); transition: .35s; opacity: .25; }
+#enterSound:not(:disabled) { opacity: 1; }
+#enterSound:not(:disabled):hover { border-color: var(--ink); color: var(--ink); }
+#intro { position: fixed; inset: 0; z-index: 150; pointer-events: none; overflow: hidden; --bar: 15vh; --ret: 0; --retS: 1; --retO: 0; --br: 0; --tk: 0; --fl: 0; }
+#intro .bar { position: absolute; left: 0; right: 0; height: var(--bar); background: #000; }
+#intro .bar.t { top: 0; } #intro .bar.b { bottom: 0; }
+#intro .reticle { position: absolute; left: 50%; top: 50%; width: 50vmin; height: 50vmin; margin: -25vmin 0 0 -25vmin; border: 1px solid rgba(255, 163, 26, .85); border-radius: 50%; opacity: var(--retO); transform: scale(var(--retS)) rotate(calc(var(--ret) * 220deg)); box-shadow: 0 0 40px rgba(255, 163, 26, .25), inset 0 0 40px rgba(255, 163, 26, .12); }
+#intro .reticle::before, #intro .reticle::after { content: ''; position: absolute; background: rgba(255, 163, 26, .85); }
+#intro .reticle::before { left: 50%; top: -14px; bottom: -14px; width: 1px; }
+#intro .reticle::after { top: 50%; left: -14px; right: -14px; height: 1px; }
+#intro .br { position: absolute; width: 38px; height: 38px; border: 0 solid rgba(234, 242, 255, .8); opacity: var(--br); }
+#intro .br.tl { left: calc(var(--gut) + 4px); top: calc(var(--bar) + 18px); border-left-width: 1px; border-top-width: 1px; }
+#intro .br.tr { right: calc(var(--gut) + 4px); top: calc(var(--bar) + 18px); border-right-width: 1px; border-top-width: 1px; }
+#intro .br.bl { left: calc(var(--gut) + 4px); bottom: calc(var(--bar) + 18px); border-left-width: 1px; border-bottom-width: 1px; }
+#intro .br.brr { right: calc(var(--gut) + 4px); bottom: calc(var(--bar) + 18px); border-right-width: 1px; border-bottom-width: 1px; }
+#intro .ticker { position: absolute; left: 0; right: 0; bottom: calc(var(--bar) + 26px); display: flex; flex-direction: column; align-items: center; gap: 8px; font-family: var(--m); font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--ink); opacity: var(--tk); }
+#intro .ticker b { font-weight: 500; font-size: 30px; letter-spacing: .12em; color: var(--amber); font-variant-numeric: tabular-nums; min-height: 1.2em; }
+#intro .flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 52%, #fff 0%, #ffd9a0 30%, rgba(255, 163, 26, 0) 75%); opacity: var(--fl); }
+.panel[data-id="arrival"] h2 { letter-spacing: calc(-.035em + (1 - var(--t)) * .32em); }
+.panel[data-id="arrival"] .kicker { letter-spacing: calc(.2em + (1 - var(--t)) * .6em); }
+.panel[data-id="arrival"] .scroll-cue { display: none; }
+@media (max-width: 800px) { #intro { --bar: 11vh; } #intro .ticker b { font-size: 22px; } .ld-btns { flex-direction: column; align-items: stretch; } }

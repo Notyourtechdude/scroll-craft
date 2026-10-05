@@ -40,12 +40,23 @@
   </footer>
   <div class="bar" aria-hidden="true"><i id="bar"></i></div>
 
+  <div id="intro" aria-hidden="true">
+    <i class="bar t"></i><i class="bar b"></i>
+    <i class="reticle"></i>
+    <i class="br tl"></i><i class="br tr"></i><i class="br bl"></i><i class="br brr"></i>
+    <div class="ticker"><span id="tkA">Acquiring site</span><b id="tkB"></b></div>
+    <i class="flash"></i>
+  </div>
+
   <div id="loader">
     <div class="ld-inner">
       <div class="ld-mark"></div>
       <div class="ld-num"><b id="ldNum">0</b><u>%</u></div>
       <div class="ld-status" id="ldStatus">Initialising survey</div>
-      <button id="enter" type="button" disabled data-hover>Enter site</button>
+      <div class="ld-btns">
+        <button id="enter" type="button" disabled data-hover>Enter site</button>
+        <button id="enterSound" type="button" disabled data-hover>Enter with sound</button>
+      </div>
       <p class="ld-note">Best with sound on and headphones. Scroll, move your mouse, watch it build.</p>
     </div>
   </div>

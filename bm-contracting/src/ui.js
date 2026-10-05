@@ -52,11 +52,11 @@ export function createUI({ onJump, onSoundToggle }) {
   let current = -1;
 
   return {
-    update(p, cam, onChapter) {
+    update(p, cam, onChapter, introK = 1) {
       let cur = 0;
       panels.forEach(({ el, c }, i) => {
         const t = (p - c.start) / (c.end - c.start);
-        const inn = smoothstep(0, .2, t);
+        const inn = c.id === 'arrival' ? introK : smoothstep(0, .2, t);
         const out = c.hold ? 1 : 1 - smoothstep(.8, 1, t);
         const v = Math.min(inn, out);
         el.style.setProperty('--t', v.toFixed(3));
@@ -78,7 +78,7 @@ export function createUI({ onJump, onSoundToggle }) {
       if (els.statFloors) els.statFloors.textContent = pad(Math.floor(floors), 2);
       els.coords.textContent = `X ${cam.x.toFixed(1).padStart(6, ' ')} · Y ${cam.y.toFixed(1).padStart(5, ' ')} · Z ${cam.z.toFixed(1).padStart(6, ' ')}`;
       els.bar.style.transform = `scaleX(${p})`;
-      els.hint.style.opacity = 1 - smoothstep(.0, .03, p);
+      els.hint.style.opacity = (1 - smoothstep(.0, .03, p)) * smoothstep(.9, 1, introK);
       document.documentElement.style.setProperty('--day', smoothstep(.25, .45, p) * (1 - smoothstep(.7, .85, p)));
     },
   };

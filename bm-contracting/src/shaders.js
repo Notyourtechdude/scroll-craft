@@ -226,7 +226,7 @@ void main(){
 
 /* ---------------------------------------------------------------- post */
 export const POST_FS = /* glsl */ `
-uniform sampler2D tDiffuse; uniform float uTime, uVel, uFade;
+uniform sampler2D tDiffuse; uniform float uTime, uVel, uFade, uFlash, uImpact;
 varying vec2 vUv;
 void main(){
   vec2 c = vUv - .5;
@@ -234,12 +234,40 @@ void main(){
   vec2 uv = .5 + c * (1. + r2 * uVel * .22);
   float ca = (.0014 + abs(uVel) * .011) * (r2 * 3.2 + .25);
   vec3 col;
-  col.r = texture2D(tDiffuse, uv + c * ca).r;
-  col.g = texture2D(tDiffuse, uv).g;
-  col.b = texture2D(tDiffuse, uv - c * ca).b;
+  if (uImpact > .002){
+    vec3 acc = vec3(0.);
+    for (int i = 0; i < 8; i++){
+      float k = float(i) / 7.;
+      vec2 u2 = .5 + (uv - .5) * (1. - k * uImpact * .24);
+      acc.r += texture2D(tDiffuse, u2 + c * ca).r;
+      acc.g += texture2D(tDiffuse, u2).g;
+      acc.b += texture2D(tDiffuse, u2 - c * ca).b;
+    }
+    col = acc / 8.;
+  } else {
+    col.r = texture2D(tDiffuse, uv + c * ca).r;
+    col.g = texture2D(tDiffuse, uv).g;
+    col.b = texture2D(tDiffuse, uv - c * ca).b;
+  }
   col *= 1. - smoothstep(.3, 1., length(c) * 1.3) * .62;
   float g = fract(sin(dot(uv * 900. + fract(uTime) * 61., vec2(12.9898, 78.233))) * 43758.5453);
   col += (g - .5) * .016 * (.4 + dot(col, vec3(.33)));
   col *= uFade;
+  col += uFlash * vec3(1., .92, .8);
   gl_FragColor = vec4(col, 1.);
+}`;
+
+/* ----------------------------------------------------- intro light beam */
+export const BEAM_VS = /* glsl */ `
+varying float vY; varying vec3 vN2; varying vec3 vWp;
+void main(){ vY = position.y + .5; vec4 w = modelMatrix * vec4(position, 1.); vWp = w.xyz; vN2 = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * viewMatrix * w; }`;
+export const BEAM_FS = /* glsl */ `
+uniform float uI, uTime; uniform vec3 uCol;
+varying float vY; varying vec3 vN2; varying vec3 vWp;
+void main(){
+  vec3 V = normalize(cameraPosition - vWp);
+  float rim = pow(abs(dot(normalize(vN2), V)), 1.6);
+  float a = rim * (1. - vY * .85) * uI;
+  a *= .75 + .25 * sin(vY * 40. - uTime * 14.);
+  gl_FragColor = vec4(uCol * a, a);
 }`;

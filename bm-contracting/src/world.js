@@ -3,7 +3,7 @@ import { U, smoothstep as ss } from './env.js';
 import { FLOORS } from './content.js';
 import {
   SKY_VS, SKY_FS, TERRAIN_VS, TERRAIN_FS, BUILD_VS, BUILD_FS, FACADE_FS,
-  PART_VS, PART_FS, REBAR_VS, REBAR_FS,
+  PART_VS, PART_FS, REBAR_VS, REBAR_FS, BEAM_VS, BEAM_FS,
 } from './shaders.js';
 
 const rng = (seed) => () => {
@@ -255,12 +255,48 @@ export function createWorld(scene, { mobile }) {
   particles.frustumCulled = false;
   group.add(particles);
 
+  /* intro: charge-up light, ignition beam and two shockwave rings */
+  const beamGeo = new THREE.CylinderGeometry(1, 1, 1, 40, 1, true);
+  beamGeo.translate(0, .5, 0);
+  const beamMat = new THREE.ShaderMaterial({
+    uniforms: { uI: { value: 0 }, uTime: U.uTime, uCol: { value: new THREE.Color(0xffb44a).multiplyScalar(2.2) } },
+    vertexShader: BEAM_VS, fragmentShader: BEAM_FS, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
+  });
+  const beam = new THREE.Mesh(beamGeo, beamMat);
+  beam.frustumCulled = false; beam.visible = false;
+  group.add(beam);
+  const mkRing = (col) => {
+    const m = new THREE.Mesh(new THREE.RingGeometry(.955, 1, 160).rotateX(-Math.PI / 2),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(col).multiplyScalar(3), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false }));
+    m.position.y = .15; m.visible = false; m.frustumCulled = false; group.add(m); return m;
+  };
+  const ring1 = mkRing(0xffa31a), ring2 = mkRing(0x4cc9ff);
+
   const ray = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
 
   return {
     top,
     setPixelRatio(r) { partMat.uniforms.uPix.value = r; },
+    setIntro(T) {
+      const t = T - 3.55;
+      const charge = ss(2.0, 3.55, T);
+      const on = T > 1.6 && T < 11;
+      beam.visible = on;
+      if (on) {
+        const rise = t > 0 ? 1 - Math.pow(1 - Math.min(t / .5, 1), 3) : 0;
+        const h = t > 0 ? 8 + rise * 190 : 3 + charge * 9;
+        const w = t > 0 ? .55 + Math.exp(-t * 3) * 2.2 : .15 + charge * .35;
+        beam.scale.set(w, h, w);
+        beam.position.set(0, -2, 0);
+        beamMat.uniforms.uI.value = t > 0 ? 2.6 * Math.exp(-t * .55) + .15 : charge * 1.4;
+      }
+      for (const [r, d, k] of [[ring1, 0, 48], [ring2, .28, 40]]) {
+        const tt = t - d;
+        r.visible = tt > 0 && tt < 5;
+        if (r.visible) { r.scale.setScalar(.5 + tt * k); r.material.opacity = Math.exp(-tt * .75); }
+      }
+    },
     update(p, time, vel, mouse, camera) {
       sky.position.copy(camera.position);
       // survey outline
