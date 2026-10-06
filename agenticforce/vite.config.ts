@@ -12,17 +12,9 @@ export default defineConfig({
     },
   },
   build: {
+    // three + R3F (~245 kB gzip) is reached only through the lazily imported
+    // scenes, so default splitting keeps it out of the first load. Manual
+    // chunking was tried and pulled React into that chunk, defeating it.
     chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      output: {
-        // three + R3F is the heaviest dependency by far. It is only reached
-        // through the lazily imported scenes, so it never blocks first paint,
-        // and its own chunk stays cached across deploys of the page code.
-        manualChunks(id) {
-          if (id.includes('node_modules/three') || id.includes('node_modules/@react-three')) return 'three'
-          if (id.includes('node_modules/gsap')) return 'gsap'
-        },
-      },
-    },
   },
 })
