@@ -30,7 +30,7 @@ export function Intro() {
       className="bg-background fixed inset-0 z-[90] grid place-items-center"
       style={{ clipPath: "inset(0% 0% 0% 0%)" }}
     >
-      <div className="flex overflow-hidden text-[clamp(2.5rem,10vw,7rem)] leading-none font-semibold tracking-[-0.05em]">
+      <div className="flex overflow-hidden pb-[0.14em] text-[clamp(2.5rem,10vw,7rem)] leading-none font-semibold tracking-[-0.05em]">
         {site.name.split("").map((c, i) => (
           <span key={i} data-intro-char className="inline-block">
             {c}
