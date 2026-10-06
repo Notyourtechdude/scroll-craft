@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Light tokens. Dark is the default theme (see .dark below and index.html);
+   these only apply once a visitor opts into light mode. */
+:root {
+  --background: oklch(0.975 0.003 260);
+  --foreground: oklch(0.2 0.01 265);
+  --muted: oklch(0.93 0.005 260);
+  --muted-foreground: oklch(0.45 0.015 265);
+  --border: oklch(0.2 0.01 265 / 12%);
+  --primary: oklch(0.55 0.13 210);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.55 0.13 210);
+  --radius: 1rem;
+}
+
+.dark {
+  --background: oklch(0.155 0.008 270);
+  --foreground: oklch(0.955 0.005 260);
+  --muted: oklch(0.22 0.01 270);
+  --muted-foreground: oklch(0.72 0.015 265);
+  --border: oklch(1 0 0 / 11%);
+  --primary: oklch(0.86 0.12 205);
+  --primary-foreground: oklch(0.18 0.01 265);
+  --ring: oklch(0.86 0.12 205);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-ring: var(--ring);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 100svh keeps the stage steady while mobile browser chrome slides; the vh line
+   is the fallback for browsers that predate small-viewport units. */
+@utility h-stage {
+  height: 100vh;
+  height: 100svh;
+}
+
+@utility min-h-stage {
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    color-scheme: dark;
+  }
+  html[data-theme="light"] {
+    color-scheme: light;
+  }
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior-y: none;
+    transition: background-color 0.4s ease, color 0.4s ease;
+  }
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

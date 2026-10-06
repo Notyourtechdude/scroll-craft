@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" class="dark" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="AgenticForce designs autonomous AI agents and the immersive web experiences that front them." />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#0d0d10" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400..800&display=swap"
+    />
+    <title>AgenticForce</title>
+    <script>
+      // Applied before first paint so a saved light theme never flashes dark.
+      // Dark is the default; the key matches src/lib/preferences.tsx.
+      (function () {
+        var theme = "dark";
+        try {
+          var saved = JSON.parse(localStorage.getItem("agenticforce:prefs:v1") || "{}");
+          if (saved.theme === "light") theme = "light";
+        } catch (e) {}
+        var root = document.documentElement;
+        root.dataset.theme = theme;
+        root.classList.toggle("dark", theme === "dark");
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>AgenticForce needs JavaScript for its interactive scenes.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
