@@ -302,8 +302,16 @@ than simply fading. Line masks reserve room for descenders; a mask clipped to
 the line box shears the tails off g, y, p and j, and that is the single most
 common way this effect looks broken.
 
-Line splitting measures real line boxes, so it re-runs after `document.fonts.ready`.
-Do not call it on text that is still loading its face.
+Line splitting measures real line boxes, so it re-runs after `document.fonts.ready`
+and again whenever the viewport width changes (a rotated phone, a resized
+window). Do not call it on text that is still loading its face.
+
+**Put it on plain text.** A split rebuilds the element from its text, so a link,
+an `<em>` or a `<br>` inside it is gone after the first frame. The engine warns
+in the console when it flattens markup; move the emphasis outside the kinetic
+element instead of ignoring the warning. A `chars` split hands assistive tech the
+sentence once and hides the per-letter spans, which VoiceOver would otherwise
+spell out.
 
 **One kinetic headline per act, at most.** Two competing for attention is noise,
 and every heading assembling the same way is the templated rhythm this skill
@@ -432,8 +440,11 @@ continuous place rather than a stack of slides.
 <section data-sc-act="pan"   data-sc-drift="#0E1412"> …
 ```
 
-The page ground interpolates between the values as each act takes over. Keep the
-whole set inside one theme family. Drifting from near-black to cream mid-page
+The page ground interpolates between the values as each act takes over: the
+first drift act eases away from the page's own `--sc-canvas`, each later one
+from the drift before it, and scrolling back above every drift act hands the
+ground back to your stylesheet. Values can be any CSS colour, `oklch()` and
+`color-mix()` included. Keep the whole set inside one theme family. Drifting from near-black to cream mid-page
 is not atmosphere, it is the reader wondering whether they clicked something.
 
 Three to five stops across a page. Small steps. The effect should be invisible

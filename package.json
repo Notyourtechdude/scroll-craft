@@ -1,0 +1,12 @@
+{
+  "name": "scroll-craft-dev",
+  "private": true,
+  "description": "Development harness for the scrollcraft skill. Not part of the installed plugin.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 \"tests/scrollcraft/*.test.mjs\""
+  },
+  "devDependencies": {
+    "playwright-core": "1.56.1"
+  }
+}

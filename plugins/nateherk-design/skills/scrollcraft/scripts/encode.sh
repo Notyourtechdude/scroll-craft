@@ -10,6 +10,9 @@
 #   ./encode.sh in.mp4 out.mp4            desktop master  (1080p, -g 8, crf 20)
 #   ./encode.sh in.mp4 out-m.mp4 mobile   phone variant   (720p,  -g 4, crf 24)
 #
+# Heights are ceilings, not targets: a 720p source stays 720p in the desktop
+# master, because upscaling adds bytes and no detail.
+#
 # CRF override, for the grain-heavy worlds assets.md warns about (marine snow,
 # bioluminescence, smoke, film grain). A dense GOP doubles the cost of grain, so
 # a world like that wants 22-23 rather than the default 20:
@@ -46,18 +49,23 @@ pick_ffmpeg() {
   return 1
 }
 FFMPEG="$(pick_ffmpeg)"
+# ffprobe only feeds the summary line. Its absence must not stop the encode,
+# and under `set -e` a bare failing `command -v` would end the script silently.
 FFPROBE="$(dirname "$FFMPEG")/ffprobe"
-[ -x "$FFPROBE" ] || FFPROBE="$(command -v ffprobe)"
+[ -x "$FFPROBE" ] || FFPROBE="$(command -v ffprobe 2>/dev/null || true)"
 
 IN="${1:?usage: encode.sh <in> <out> [mobile|desktop] [crf]}"
 OUT="${2:?usage: encode.sh <in> <out> [mobile|desktop] [crf]}"
 MODE="${3:-desktop}"
+[ -f "$IN" ] || { echo "ERROR: input not found: $IN" >&2; exit 1; }
 
-if [ "$MODE" = "mobile" ]; then
-  SCALE="scale=-2:720"; GOP=4; CRF=24
-else
-  SCALE="scale=-2:1080"; GOP=8; CRF=20
-fi
+case "$MODE" in
+  mobile)  MAXH=720;  GOP=4; CRF=24 ;;
+  desktop) MAXH=1080; GOP=8; CRF=20 ;;
+  *) echo "ERROR: mode must be 'desktop' or 'mobile', got '$MODE'" >&2; exit 1 ;;
+esac
+# -2 keeps the width even, which yuv420p requires.
+SCALE="scale=-2:'min(${MAXH},ih)'"
 
 # Positional beats env var beats the mode default.
 CRF="${4:-${SCROLLCRAFT_CRF:-$CRF}}"
@@ -76,5 +84,6 @@ mkdir -p "$(dirname "$OUT")"
   "$OUT"
 
 SIZE=$(du -h "$OUT" | cut -f1)
-DUR=$("$FFPROBE" -v error -show_entries format=duration -of csv=p=0 "$OUT")
+DUR="?"
+[ -n "$FFPROBE" ] && DUR=$("$FFPROBE" -v error -show_entries format=duration -of csv=p=0 "$OUT" || echo "?")
 echo "$OUT  ${SIZE}  ${DUR}s  gop=${GOP}  crf=${CRF}"

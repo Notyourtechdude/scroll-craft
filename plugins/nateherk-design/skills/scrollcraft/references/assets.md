@@ -7,6 +7,7 @@ Generation through kie.ai, then encoding for scrubbing. All of it via
 node <skill>/scripts/kie.mjs probe                     # credit check first
 node <skill>/scripts/kie.mjs still "<prompt>" out/01.png --ar 16:9 [--ref brand.png]
 node <skill>/scripts/kie.mjs shot  "<move>"   out/01.png out/01.mp4 --dur 5 [--tail end.png]
+node <skill>/scripts/kie.mjs fetch <taskId> out/01.mp4  # collect a job a dead run already paid for
 bash  <skill>/scripts/encode.sh out/01.mp4 assets/01.mp4
 bash  <skill>/scripts/encode.sh out/01.mp4 assets/01-m.mp4 mobile
 ```

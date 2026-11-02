@@ -3,34 +3,36 @@
  * Worldflight rig assertions. Not a contact sheet: these are the mechanical
  * claims the mode makes, checked one at a time.
  *
- *   node lab/worldflight-assert.mjs --url http://localhost:4520
+ *   node <skill>/scripts/worldflight-assert.mjs --url http://localhost:4520
+ *
+ * Reads the engine's playhead records through ScrollCraft.instances, so it
+ * runs against any page that calls ScrollCraft.mount(), with nothing extra
+ * defined by the page.
  */
-import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
-const { chromium } = createRequire(path.join(process.cwd(), "package.json"))("playwright-core");
+import { findChrome } from "./lib/tools.mjs";
+
+// Resolved from the BUILD project, like shoot.mjs: the skill has no node_modules.
+let chromium;
+try {
+  ({ chromium } = createRequire(path.join(process.cwd(), "package.json"))("playwright-core"));
+} catch {
+  console.error("playwright-core not found. Run this in the build project after:\n  npm i playwright-core");
+  process.exit(1);
+}
 
 const argv = process.argv.slice(2);
 const arg = (n, d) => { const i = argv.indexOf(n); return i > -1 && argv[i + 1] ? argv[i + 1] : d; };
 const URL = arg("--url", "http://localhost:4520");
 
-const CHROME = [
-  process.env.SCROLLCRAFT_CHROME,
-  // Windows
-  "C:/Program Files/Google/Chrome/Application/chrome.exe",
-  "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
-  "C:/Program Files/Microsoft/Edge/Application/msedge.exe",
-  // macOS
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "/Applications/Chromium.app/Contents/MacOS/Chromium",
-  "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-  // Linux
-  "/usr/bin/google-chrome",
-  "/usr/bin/google-chrome-stable",
-  "/usr/bin/chromium",
-  "/usr/bin/chromium-browser",
-  "/snap/bin/chromium",
-].find((p) => p && fs.existsSync(p));
+const CHROME = findChrome();
+if (!CHROME) {
+  // Never fall back to Playwright's bundled Chromium: it cannot decode h264, so
+  // every leg would sit on its poster and the paint assertions would mislead.
+  console.error("No installed Chrome found. Set SCROLLCRAFT_CHROME to its path.");
+  process.exit(1);
+}
 
 let pass = 0, fail = 0;
 const ok = (name, cond, note = "") => {
@@ -104,14 +106,22 @@ const browser = await chromium.launch({ executablePath: CHROME, headless: true }
 
   const trace = await page.evaluate(({ y }) => new Promise((res) => {
     const v = document.querySelectorAll("[data-sc-segment] video")[0];
-    const clip = window.__sc.clips.find((c) => c.el === v);
+    const insts = (window.ScrollCraft && window.ScrollCraft.instances) || [];
+    const inst = insts.find((i) => i.clips.some((c) => c.el === v));
+    const clip = inst && inst.clips.find((c) => c.el === v);
+    if (!clip) throw new Error("no ScrollCraft instance owns the first leg's clip; is the engine mounted?");
+    // The rate the engine should be using: the clip's own data-sc-lerp, else
+    // the mount's. A page may tune it on purpose; the assertion is that the
+    // engine honours what was asked for, not that nobody asked.
+    const own = parseFloat(v.getAttribute("data-sc-lerp"));
+    const want = own > 0 ? Math.min(Math.max(own, 0.02), 1) : inst.lerp;
     const s = [];
     scrollTo({ top: y, behavior: "instant" });
     let n = 0;
     (function f() {
       s.push(+v.currentTime.toFixed(4));
       if (++n < 70) requestAnimationFrame(f);
-      else res({ s, target: clip.target * (v.duration || 1), dur: v.duration, lerp: clip.lerp });
+      else res({ s, target: clip.target * (v.duration || 1), dur: v.duration, lerp: clip.lerp, want });
     })();
   }), { y: B });
 
@@ -126,7 +136,8 @@ const browser = await chromium.launch({ executablePath: CHROME, headless: true }
   ok("playhead does not overshoot", overshoot <= 0.02, `max excess ${overshoot.toFixed(4)}s`);
   ok("playhead converges on the target", Math.abs(end - trace.target) < 0.05,
     `residual ${Math.abs(end - trace.target).toFixed(4)}s`);
-  ok("lerp rate is the 0.18 default", Math.abs(trace.lerp - 0.18) < 1e-9);
+  ok("lerp rate is the one the page configured", Math.abs(trace.lerp - trace.want) < 1e-9,
+    `clip ${trace.lerp}, configured ${trace.want}`);
 
   // ---- deadband: no seek thrash while the page is still -------------------
   await page.waitForTimeout(900);

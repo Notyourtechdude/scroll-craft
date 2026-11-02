@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>engine fixture</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/plugins/nateherk-design/skills/scrollcraft/engine/scrollcraft.css">
+<style>
+  :root { --sc-canvas: #08090b; --sc-font-display: system-ui, sans-serif; --sc-font-text: system-ui, sans-serif; }
+  html { scroll-behavior: auto; }
+  .screen { height: 100vh; }
+  #kin { font: 48px/1.1 system-ui, sans-serif; margin: 0; max-width: 1100px; }
+  .rail { gap: 40px; padding: 40px; }
+  .rail > div { flex: 0 0 600px; height: 300px; background: #333; }
+</style>
+</head>
+<body>
+<section id="hero" class="screen" data-sc-act="flow"><h1>Fixture</h1></section>
+<div id="grow"></div>
+
+<section id="drift" data-sc-act="pin" data-sc-span="3" data-sc-drift="#ff0000">
+  <div data-sc-stage>
+    <h2 id="kin" data-sc-cue="0 1 0" data-sc-kinetic="lines">The quick brown fox jumps over the lazy dog while seven wizards quietly judge the boxing match</h2>
+    <p id="chars" data-sc-cue="0 1 0" data-sc-kinetic="chars">Hello there</p>
+    <p id="nested" data-sc-cue="0 1 0" data-sc-kinetic="words">Plain <em>emphasis</em> here</p>
+    <!-- The template's CTA: magnet and cue on one element, both writing transform. -->
+    <a id="mag" href="#" data-sc-magnet="0.3" data-sc-cue="0 1 0" data-sc-rise="0"
+       style="display:inline-block;padding:20px 40px;margin:40px;background:#444;color:#fff">Join</a>
+  </div>
+</section>
+
+<section id="seq" data-sc-act="scrub" data-sc-span="2">
+  <div data-sc-stage><canvas data-sc-sequence="/tests/scrollcraft/.media/frames/f{ii}.png:10:1"></canvas></div>
+</section>
+
+<section id="missing" data-sc-act="scrub" data-sc-span="2">
+  <div data-sc-stage><video data-sc-scrub data-sc-src="/tests/scrollcraft/.media/does-not-exist.webm" muted playsinline></video></div>
+</section>
+
+<section id="clip" data-sc-act="scrub" data-sc-span="2">
+  <div data-sc-stage><video data-sc-scrub data-sc-src="/tests/scrollcraft/.media/clip.webm" muted playsinline></video></div>
+</section>
+
+<section id="pan" data-sc-act="pan" data-sc-span="3">
+  <div data-sc-stage><div class="rail" data-sc-pan="0"><div></div><div></div><div></div><div></div><div></div></div></div>
+</section>
+
+<section class="screen" data-sc-act="flow"><p data-sc-in>end</p></section>
+
+<script src="/plugins/nateherk-design/skills/scrollcraft/engine/scrollcraft.js"></script>
+<script>window.__api = ScrollCraft.mount(document);</script>
+</body>
+</html>

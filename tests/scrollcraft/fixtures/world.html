@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>worldflight fixture</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/plugins/nateherk-design/skills/scrollcraft/engine/scrollcraft.css">
+<style>html { scroll-behavior: auto; } [data-sc-copy] { position: absolute; left: 5vw; bottom: 10vh; color: #fff; font: 600 40px system-ui; }</style>
+</head>
+<body>
+<!-- Mounted exactly as worldflight.md documents it: no page-defined globals. -->
+<div data-sc-mode="worldflight" data-sc-seam="0.12">
+  <div data-sc-world>
+    <div data-sc-segment data-sc-w="1.4" data-sc-waypoint="One">
+      <img class="sc-world__poster" src="/tests/scrollcraft/.media/poster.png" alt="">
+      <video data-sc-src="/tests/scrollcraft/.media/clip.webm" muted playsinline></video>
+    </div>
+    <div data-sc-segment data-sc-w="1.4" data-sc-waypoint="Two">
+      <img class="sc-world__poster" src="/tests/scrollcraft/.media/poster.png" alt="">
+      <video data-sc-src="/tests/scrollcraft/.media/clip.webm" muted playsinline></video>
+    </div>
+  </div>
+  <div data-sc-world-copy>
+    <div data-sc-copy data-sc-window="hero"><p>Hero line</p></div>
+    <div data-sc-copy data-sc-window="finale"><p>Finale line</p></div>
+  </div>
+  <div data-sc-spacer aria-hidden="true"></div>
+</div>
+<script src="/plugins/nateherk-design/skills/scrollcraft/engine/scrollcraft.js"></script>
+<script>ScrollCraft.mount(document);</script>
+</body>
+</html>

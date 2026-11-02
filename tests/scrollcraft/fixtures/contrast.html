@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>contrast fixture</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/plugins/nateherk-design/skills/scrollcraft/engine/scrollcraft.css">
+<style>
+  :root { --sc-canvas: #08090b; --sc-ink: oklch(0.97 0.01 90); }
+  html { scroll-behavior: auto; }
+  #ink { font: 600 56px/1.1 system-ui; color: var(--sc-ink); }
+  #soft { font: 400 24px/1.4 system-ui; color: color-mix(in oklab, var(--sc-ink) 70%, transparent); }
+</style>
+</head>
+<body>
+<section data-sc-act="pin" data-sc-span="2">
+  <div data-sc-stage>
+    <div class="sc-copy sc-copy--lead" data-sc-cue="0 1 0">
+      <h1 id="ink">Ink in oklch</h1>
+      <p id="soft">Soft ink at seventy percent</p>
+    </div>
+  </div>
+</section>
+<script src="/plugins/nateherk-design/skills/scrollcraft/engine/scrollcraft.js"></script>
+<script>ScrollCraft.mount(document);</script>
+</body>
+</html>

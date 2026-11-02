@@ -22,6 +22,7 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
+import { findChrome, findFfmpeg, isPlaceholderKey } from "./lib/tools.mjs";
 import { paths } from "./workspace.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -42,41 +43,9 @@ add("required", "node", major >= 18, `v${process.versions.node}`,
   "Install Node 18 or newer.");
 
 // -------------------------------------------------------------- ffmpeg ----
-function globWinGet() {
-  const home = process.env.USERPROFILE || process.env.HOME || "";
-  const base = path.join(home, "AppData/Local/Microsoft/WinGet/Packages");
-  if (!fs.existsSync(base)) return [];
-  const out = [];
-  for (const d of fs.readdirSync(base)) {
-    if (!/^Gyan\.FFmpeg/i.test(d)) continue;
-    const inner = path.join(base, d);
-    for (const e of fs.readdirSync(inner)) {
-      const p = path.join(inner, e, "bin/ffmpeg.exe");
-      if (fs.existsSync(p)) out.push(p);
-    }
-  }
-  return out;
-}
-
-const candidates = [
-  process.env.SCROLLCRAFT_FFMPEG,
-  "ffmpeg",
-  ...globWinGet(),
-  "/usr/local/bin/ffmpeg",
-  "/opt/homebrew/bin/ffmpeg",
-  "/usr/bin/ffmpeg",
-  "/snap/bin/ffmpeg",
-].filter(Boolean);
-
-let ffmpeg = null, filterCount = 0;
-for (const c of candidates) {
-  const out = run(c, ["-hide_banner", "-filters"]);
-  if (!out) continue;
-  const n = out.split("\n").length;
-  if (n > filterCount) { filterCount = n; ffmpeg = c; }
-  if (n > 200) break;
-}
-add("required", "ffmpeg (full build)", filterCount > 200,
+const ff = findFfmpeg();
+const ffmpeg = ff?.path || null, filterCount = ff?.filters || 0;
+add("required", "ffmpeg (full build)", Boolean(ff?.full),
   ffmpeg ? `${ffmpeg}  (${filterCount} filters)` : "not found",
   "A stripped ffmpeg lacks scale/fps/psnr and the webp muxer. Install a full build (Windows: winget install Gyan.FFmpeg) or set SCROLLCRAFT_FFMPEG to one.");
 
@@ -101,42 +70,35 @@ try {
 add("verify", "playwright-core", pw, pwWhere,
   "Run `npm i playwright-core` inside the build folder. Only needed for the verification pass.");
 
-const chrome = [
-  process.env.SCROLLCRAFT_CHROME,
-  // Windows
-  "C:/Program Files/Google/Chrome/Application/chrome.exe",
-  "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
-  "C:/Program Files/Microsoft/Edge/Application/msedge.exe",
-  // macOS
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "/Applications/Chromium.app/Contents/MacOS/Chromium",
-  "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-  // Linux
-  "/usr/bin/google-chrome",
-  "/usr/bin/google-chrome-stable",
-  "/usr/bin/chromium",
-  "/usr/bin/chromium-browser",
-  "/snap/bin/chromium",
-].find((p) => p && fs.existsSync(p));
+const chrome = findChrome();
 add("verify", "Chrome", Boolean(chrome), chrome || "not found",
   "Install Chrome, or set SCROLLCRAFT_CHROME to an executable.");
 
 // ------------------------------------------------------------- kie key ----
+// Mirrors kie.mjs: the environment wins, then the nearest .env walking up.
 function findKey() {
-  if (process.env.KIE_AI_API_KEY) return "env";
+  if (process.env.KIE_AI_API_KEY) return { where: "env", value: process.env.KIE_AI_API_KEY };
   let dir = process.cwd();
   for (let i = 0; i < 8; i++) {
     const p = path.join(dir, ".env");
-    if (fs.existsSync(p) && /^\s*KIE_AI_API_KEY\s*=\s*\S+/m.test(fs.readFileSync(p, "utf8"))) return p;
+    const m = fs.existsSync(p) && fs.readFileSync(p, "utf8").match(/^\s*KIE_AI_API_KEY\s*=\s*(\S.*?)\s*$/m);
+    if (m) return { where: p, value: m[1].replace(/^["']|["']$/g, "") };
     const up = path.dirname(dir);
     if (up === dir) break;
     dir = up;
   }
   return null;
 }
-const keyWhere = findKey();
-add("optional", "KIE_AI_API_KEY", Boolean(keyWhere), keyWhere || "not set",
-  "Only needed to GENERATE imagery. Building from your own photos and footage needs no key and no spend. Copy .env.example to .env to set one.");
+const key = findKey();
+// .env.example ships a placeholder, and copying it to .env is the documented
+// first step. Treating that as a key sends a guaranteed-401 request later.
+const placeholder = key && isPlaceholderKey(key.value);
+const keyWhere = key && !placeholder ? key.where : null;
+add("optional", "KIE_AI_API_KEY", Boolean(keyWhere),
+  placeholder ? `placeholder value in ${key.where}` : keyWhere || "not set",
+  placeholder
+    ? "Replace the placeholder with a real key from https://kie.ai, or leave it unset to build from your own assets."
+    : "Only needed to GENERATE imagery. Building from your own photos and footage needs no key and no spend. Copy .env.example to .env to set one.");
 
 // ----------------------------------------------------------- workspace ----
 let ws = null;
@@ -170,8 +132,7 @@ console.log(softFails.length
   : "\u001b[32mReady.\u001b[0m\n");
 
 if (process.argv.includes("--probe") && keyWhere) {
-  const { execFileSync: x } = await import("node:child_process");
   try {
-    console.log("credit: " + x(process.execPath, [path.join(HERE, "kie.mjs"), "probe"], { encoding: "utf8" }).trim().replace(/^credit:\s*/, ""));
+    console.log("credit: " + execFileSync(process.execPath, [path.join(HERE, "kie.mjs"), "probe"], { encoding: "utf8" }).trim().replace(/^credit:\s*/, ""));
   } catch (e) { console.log("balance probe failed: " + e.message); }
 }

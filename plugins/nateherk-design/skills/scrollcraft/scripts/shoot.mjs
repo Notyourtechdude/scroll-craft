@@ -19,6 +19,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
+import { findChrome, findFfmpeg } from "./lib/tools.mjs";
 
 // The skill lives outside the project it is building, so resolve playwright
 // from the BUILD project's node_modules (cwd), not from next to this file.
@@ -42,23 +43,7 @@ const W = parseInt(arg("--width", "1440"), 10);
 const H = parseInt(arg("--height", "900"), 10);
 const REDUCED = has("--reduced-motion");
 
-const CHROME = [
-  process.env.SCROLLCRAFT_CHROME,
-  // Windows
-  "C:/Program Files/Google/Chrome/Application/chrome.exe",
-  "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
-  "C:/Program Files/Microsoft/Edge/Application/msedge.exe",
-  // macOS
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "/Applications/Chromium.app/Contents/MacOS/Chromium",
-  "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-  // Linux
-  "/usr/bin/google-chrome",
-  "/usr/bin/google-chrome-stable",
-  "/usr/bin/chromium",
-  "/usr/bin/chromium-browser",
-  "/snap/bin/chromium",
-].find((p) => p && fs.existsSync(p));
+const CHROME = findChrome();
 
 if (!CHROME) {
   console.error("No installed Chrome found. Set SCROLLCRAFT_CHROME to its path.");
@@ -66,6 +51,10 @@ if (!CHROME) {
 }
 
 fs.mkdirSync(OUT, { recursive: true });
+// The contact sheet reads NN.png as a numbered sequence and tiles a full grid,
+// so frames left over from an earlier, longer run fill out its last row with
+// screenshots of a different build. Start from an empty set.
+for (const f of fs.readdirSync(OUT)) if (/^\d+\.png$/.test(f) || f === "sheet.png") fs.rmSync(path.join(OUT, f));
 
 const browser = await chromium.launch({ executablePath: CHROME, headless: true });
 const page = await browser.newPage({
@@ -349,7 +338,7 @@ for (let i = 0; i < positions.length; i++) {
       el.setAttribute("data-sc-shot-fixed", "");
     });
   });
-  await page.addStyleTag({
+  const hideTag = await page.addStyleTag({
     content: "[data-sc-cue],[data-sc-cue] *,[data-sc-copy],[data-sc-copy] *," +
              "[data-sc-shot-fixed]{visibility:hidden!important}",
   });
@@ -365,6 +354,22 @@ for (let i = 0; i < positions.length; i++) {
       return 0.2126 * f(r) + 0.7152 * f(gr) + 0.0722 * f(b);
     };
     const ratio = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    // Any computed colour to [r, g, b, a], by painting it. Chrome serialises
+    // oklch(), lab() and color-mix() as written rather than as rgb(), and
+    // pulling digits out of "oklch(0.97 0.01 90)" grades lightness as red.
+    const pc = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+    pc.canvas.width = pc.canvas.height = 1;
+    const rgba = (css) => {
+      pc.clearRect(0, 0, 1, 1);
+      pc.fillStyle = "rgba(0,0,0,0)";
+      pc.fillStyle = css;
+      pc.fillRect(0, 0, 1, 1);
+      const d = pc.getImageData(0, 0, 1, 1).data;
+      return [d[0], d[1], d[2], d[3] / 255];
+    };
+    // Translucent ink is composited by the browser in sRGB before it is ever
+    // seen, so grade what it becomes over the pixel behind it.
+    const over = (fg, bg) => fg[3] >= 0.999 ? fg : [0, 1, 2].map((i) => fg[i] * fg[3] + bg[i] * (1 - fg[3]));
     const cueOpacity = (el) => {
       const o = parseFloat(getComputedStyle(el).opacity) || 0;
       const units = el.querySelectorAll(".sc-split__i");
@@ -374,9 +379,26 @@ for (let i = 0; i < positions.length; i++) {
       return o * m;
     };
     const out = [];
-    document.querySelectorAll("[data-sc-cue],[data-sc-copy]").forEach((el) => {
-      if (cueOpacity(el) < 0.85) return;
-      if (!(el.textContent || "").trim()) return;
+    // A cue is usually a block of several elements: a heading in full ink over
+    // a paragraph in soft ink. Graded as one element it is graded in the
+    // container's colour, which is the heading's, and the soft line, the one
+    // most likely to fail, is never measured. Grade every element that holds
+    // text, in its own colour, over its own patch. A kinetic split stays one
+    // unit: its line spans are the same text in the same ink.
+    const blocksOf = (cue) => {
+      const blocks = new Set();
+      const walk = document.createTreeWalker(cue, NodeFilter.SHOW_TEXT);
+      for (let t = walk.nextNode(); t; t = walk.nextNode()) {
+        if (!t.textContent.trim() || !t.parentElement) continue;
+        let b = t.parentElement;
+        const split = b.closest(".sc-is-split");
+        if (split && cue.contains(split)) b = split;
+        else if (b.closest(".sc-sr-only")) continue;
+        blocks.add(b);
+      }
+      return blocks;
+    };
+    const grade = (el, cue) => {
       const r = el.getBoundingClientRect();
       if (r.width < 8 || r.height < 8 || r.bottom < 0 || r.top > innerHeight) return;
       // Clamp the sampled rect to the viewport. The part of a pinned act's copy
@@ -391,25 +413,33 @@ for (let i = 0; i < positions.length; i++) {
       c.width = 32; c.height = 16;
       g.drawImage(img, x, y2, w, h, 0, 0, 32, 16);
       const d = g.getImageData(0, 0, 32, 16).data;
-      let maxL = 0, minL = 1, sum = 0, n = 0;
+      let maxL = 0, minL = 1, sum = 0, n = 0, maxPx = null, minPx = null;
+      const mean = [0, 0, 0];
       for (let k = 0; k < d.length; k += 4) {
-        const L = lum(d[k], d[k + 1], d[k + 2]);
-        if (L > maxL) maxL = L;
-        if (L < minL) minL = L;
+        const px = [d[k], d[k + 1], d[k + 2]];
+        const L = lum(...px);
+        if (maxPx === null || L > maxL) { maxL = L; maxPx = px; }
+        if (minPx === null || L < minL) { minL = L; minPx = px; }
         sum += L; n++;
+        mean[0] += px[0]; mean[1] += px[1]; mean[2] += px[2];
       }
+      const meanPx = mean.map((v) => v / n);
       const cs = getComputedStyle(el);
-      const fg = cs.color.match(/[\d.]+/g).map(Number);
-      const fl = lum(fg[0], fg[1], fg[2]);
+      const fg = rgba(cs.color);
+      // Opacity set on the line itself or anything between it and its cue
+      // (a muted label at 0.6, say) fades the ink just as an alpha would. The
+      // cue's own opacity is left out: it is the reveal, gated at 0.85 above.
+      for (let n = el; n && n !== cue; n = n.parentElement) fg[3] *= parseFloat(getComputedStyle(n).opacity);
+      const inkOn = (px) => lum(...over(fg, px));
       // An element that paints its own opaque background (a button, a chip) is
       // an ordinary static contrast case: grade its text against that fill, not
       // against whatever the page happens to show behind it. Hiding the element
       // to sample the backdrop necessarily hides its background too, so without
       // this every solid CTA reports a spurious failure.
-      const bg = (cs.backgroundColor.match(/[\d.]+/g) || []).map(Number);
-      const opaqueBg = bg.length >= 3 && (bg.length < 4 || bg[3] > 0.5);
-      if (opaqueBg) {
+      const bg = rgba(cs.backgroundColor);
+      if (bg[3] > 0.5) {
         const bl = lum(bg[0], bg[1], bg[2]);
+        const fl = inkOn(bg);
         out.push({
           t: (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 40),
           dir: "own-fill",
@@ -424,19 +454,24 @@ for (let i = 0; i < positions.length; i++) {
       // clean over text that is failing. Compare the ink to the mean background
       // and grade against whichever extreme is on the ink's own side.
       const meanL = sum / n;
-      const dark = fl < meanL;
+      const dark = inkOn(meanPx) < meanL;
       out.push({
         t: (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 40),
         dir: dark ? "dark-on-light" : "light-on-dark",
-        worst: +ratio(fl, dark ? minL : maxL).toFixed(2),
-        mean: +ratio(fl, meanL).toFixed(2),
+        worst: +ratio(inkOn(dark ? minPx : maxPx), dark ? minL : maxL).toFixed(2),
+        mean: +ratio(inkOn(meanPx), meanL).toFixed(2),
       });
+    };
+    document.querySelectorAll("[data-sc-cue],[data-sc-copy]").forEach((cue) => {
+      if (cueOpacity(cue) < 0.85) return;
+      blocksOf(cue).forEach((b) => grade(b, cue));
     });
     return out;
   }, { b64: bare, dpr: 2 });
+  // Remove exactly the tag this pass added. "The last <style> mentioning
+  // data-sc-cue" could be the page's own stylesheet.
+  await hideTag.evaluate((t) => t.remove());
   await page.evaluate(() => {
-    const t = [...document.querySelectorAll("style")].pop();
-    if (t && t.textContent.includes("data-sc-cue")) t.remove();
     document.querySelectorAll("[data-sc-shot-fixed]").forEach((el) => el.removeAttribute("data-sc-shot-fixed"));
   });
 
@@ -615,18 +650,8 @@ await browser.close();
 
 // Contact sheet. The point of shooting contiguously is to look at the frames
 // side by side; a folder of 20 PNGs does not get looked at that way.
-const FFMPEG = [
-  process.env.SCROLLCRAFT_FFMPEG,
-  ...(fs.existsSync(path.join(process.env.HOME || "", "AppData/Local/Microsoft/WinGet/Packages"))
-    ? fs.readdirSync(path.join(process.env.HOME, "AppData/Local/Microsoft/WinGet/Packages"))
-        .filter((d) => d.startsWith("Gyan.FFmpeg"))
-        .flatMap((d) => {
-          const base = path.join(process.env.HOME, "AppData/Local/Microsoft/WinGet/Packages", d);
-          return fs.readdirSync(base).map((v) => path.join(base, v, "bin/ffmpeg.exe"));
-        })
-    : []),
-  "/usr/local/bin/ffmpeg", "/opt/homebrew/bin/ffmpeg", "ffmpeg",
-].find((p) => p && (p === "ffmpeg" || fs.existsSync(p)));
+// The fullest ffmpeg available; scale and tile are missing from stripped ones.
+const FFMPEG = findFfmpeg()?.path;
 
 if (FFMPEG) {
   const cols = Math.min(5, report.length);

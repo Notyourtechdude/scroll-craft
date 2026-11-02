@@ -4,6 +4,79 @@ Dated notes on what changed in the skill and which build's finding drove it.
 Builds live in `OtherWorlds/Ultimate Websites/builds/`; each carries a
 `BUILD-REPORT.md`.
 
+## 2026-11-02: engineering review, and a regression suite (v0.3.0)
+
+Driven by a code review rather than a build. Every defect below was reproduced
+by a failing test before it was fixed; the suite lives at
+`tests/scrollcraft/` in the repo (outside the plugin) and runs with `npm test`.
+
+**Engine: `engine/scrollcraft.js`, `engine/scrollcraft.css`**
+
+- **Drift no longer strands the page on a drifted ground.** Scrolling back
+  above every drift act left `--sc-canvas` at the last drift colour, so the hero
+  came back on the wrong ground. It now hands the value back to the stylesheet.
+  The first drift act also eased from its own colour to itself, which is a hard
+  cut; it now eases from the page's ground. Drift accepts any CSS colour.
+- **A missing clip was refetched on every scroll frame** (26 requests in 25
+  frames). A 4xx now gives up once with a console warning; a dropped connection
+  or 5xx retries twice with backoff. The poster holds either way.
+- **No layout reads per frame.** Rails read `scrollWidth` and the progress bar
+  read `scrollHeight` inside `read()`, right after style writes, forcing a full
+  layout on every scroll frame. Both are measured in `layout()` now. `--sc-p` is
+  only written when it changes.
+- **Geometry follows the page.** Act positions were measured on mount and
+  resize only, so an image without dimensions, an embed or late copy above an
+  act pinned it against the wrong stretch of scroll. A `ResizeObserver` on the
+  body and on each rail re-runs layout, at most once per frame.
+- **Kinetic lines re-split on width change.** A rotated phone kept the desktop
+  line breaks, each line span wrapping inside its own mask. Splitting also warns
+  when it flattens nested markup, and `chars` splits expose one readable string
+  to assistive tech instead of one letter per span.
+- **Image sequences draw frames that arrive while the reader is still.** A
+  frame was only drawn on the next scroll event, so a sequence in view at load
+  stayed blank. The nearest loaded frame stands in until the exact one lands.
+- **Failsafe.** Cues and flow reveals start at opacity 0 and only the engine
+  shows them, so a mistyped `scrollcraft.js` path shipped every headline
+  invisible. If `.sc-ready` never arrives, the copy shows after 3.5s.
+- Smaller: magnets stop rewriting an identity transform once at rest (a
+  displaced magnet still writes every frame, because it shares the element with
+  a cue that read() overwrites on scroll), a clip that loads
+  after the first touch is primed for iOS too, and a page with no clips never
+  starts the playhead loop.
+
+**Harness**
+
+- **`shoot.mjs` graded `oklch()` ink at about 1:1.** It pulled digits out of the
+  computed colour string, and Chrome serialises oklch, lab and color-mix as
+  written. A near-white heading on a dark ground reported `CONTRAST FAIL`.
+  Colours are now resolved by painting them, translucent ink (and opacity set
+  on the line itself) is composited over the pixel behind it, and every text
+  element in a cue is graded in its own colour, so a soft-ink paragraph under a
+  full-ink heading is finally measured.
+- `shoot.mjs` no longer tiles stale frames from an earlier, longer run into the
+  contact sheet, and removes exactly the style tag it injected.
+- **`worldflight-assert.mjs` crashed on every documented page.** It read
+  `window.__sc`, which only the original lab page defined. It now reads
+  `ScrollCraft.instances`, refuses to fall back to h264-less bundled Chromium,
+  and checks the lerp against the page's configured rate instead of 0.18.
+- Chrome and full-ffmpeg discovery live in one module, `scripts/lib/tools.mjs`,
+  so doctor reports exactly the binaries the harness then uses.
+
+**Scripts**
+
+- **`serve.mjs`** served files from a sibling directory that shared the root's
+  name prefix, died on a malformed `%` escape, and advertised byte ranges it
+  ignored. All three fixed; it also answers HEAD, knows more media types, and
+  names a busy port instead of throwing.
+- **`kie.mjs`** lost paid jobs to a single failed poll. Polling now rides out
+  transient failures, every task id is printed the moment the job exists, and
+  `kie.mjs fetch <taskId> <out>` collects a job a dead run already paid for.
+  Usage no longer needs a key, the `.env.example` placeholder is refused before
+  any request, inline `.env` comments are stripped, and `--dur` is checked.
+- **`doctor.mjs`** reported the `.env.example` placeholder as a working key.
+- **`encode.sh`** exited silently before encoding when `ffprobe` was missing,
+  upscaled sub-1080p sources, and encoded a typo'd mode as desktop.
+
 ## 2026-08-22: bespoke fixed-stage verification state
 
 Driven by the owner's cold-scroll finding on PHASE: "Nothing happens when I

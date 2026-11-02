@@ -274,6 +274,12 @@ video[data-sc-scrub] { opacity: 0; transition: opacity 380ms var(--sc-ease-out);
 .sc-split--line { display: block; padding-bottom: 0.14em; margin-bottom: -0.14em; }
 .sc-split__i { display: inline-block; will-change: transform, opacity; }
 .sc-is-split { opacity: 1 !important; }
+/* A character split hands assistive tech one copy of the sentence through this
+   and hides the per-letter spans, which would otherwise be spelled out. */
+.sc-sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
 
 /* horizontal rail */
 [data-sc-pan] { display: flex; will-change: transform; }
@@ -289,6 +295,16 @@ video[data-sc-scrub] { opacity: 0; transition: opacity 380ms var(--sc-ease-out);
   transition: opacity 620ms var(--sc-ease-out), transform 620ms var(--sc-ease-out);
 }
 [data-sc-in].sc-in, [data-sc-stagger] > .sc-in { opacity: 1; transform: none; }
+
+/* Failsafe. Cues and flow reveals start invisible and only the engine ever
+   shows them, so a page whose scrollcraft.js 404s, is blocked, or throws before
+   mount() would ship every headline at opacity 0. If .sc-ready has not arrived
+   a few seconds in, show the copy where it sits. A mounted engine sets
+   .sc-ready synchronously, so on a working page this never matches. */
+@keyframes sc-failsafe { to { opacity: 1; transform: none; } }
+html:not(.sc-ready) :is([data-sc-cue], [data-sc-in], [data-sc-stagger] > *) {
+  animation: sc-failsafe 0.5s ease-out 3.5s forwards;
+}
 
 /* pointer devices */
 [data-sc-tilt] { transform-style: preserve-3d; will-change: transform; }

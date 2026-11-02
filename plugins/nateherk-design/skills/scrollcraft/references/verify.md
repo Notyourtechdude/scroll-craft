@@ -87,7 +87,14 @@ harness hides the text, re-shoots the same frame, and samples the real
 background under each line, so scrims, gradients and blends are all included.
 Elements with their own opaque background are graded against that fill instead.
 
-Three things it gets right that a hand-rolled version usually does not:
+Four things it gets right that a hand-rolled version usually does not:
+
+- **Every text element is graded in its own colour.** A cue is usually a
+  heading in full ink over a paragraph in `--sc-ink-soft`. Graded as one block it
+  would be graded in the heading's colour, and the soft line, the one most likely
+  to fail, would never be measured. Colours are resolved by painting them, so
+  `oklch()`, `color-mix()` and translucent ink are graded as the browser actually
+  composites them, not by pulling digits out of the computed string.
 
 - **The direction is picked per line.** Light type on a dark page fails on the
   brightest patch under it; dark type on a light page fails on the *darkest*
@@ -139,7 +146,7 @@ Two shapes that work:
 
 Real, and worth knowing before you trust a green run:
 
-- **Cues are keyed by their text.** Two cues that share a string, which
+- **Lines are keyed by their text.** Two lines that share a string, which
   taste.md's "one label per intent" rule actively encourages, are collapsed into
   one row, and the reported worst frame is the worse of the two.
 - **Lines under 0.85 opacity are skipped.** A headline parked at 0.6 over a

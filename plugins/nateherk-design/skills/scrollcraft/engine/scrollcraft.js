@@ -195,6 +195,28 @@
     }
     return null;
   }
+  // Any CSS colour to [r, g, b], by letting the browser paint it. Brand tokens
+  // arrive as oklch(), color-mix() and named colours as often as hex, and the
+  // computed string for those is not rgb(), so a regex reads the lightness and
+  // chroma channels as red and green. Hex and rgb() skip the canvas.
+  var probe = null;
+  function toRGB(css) {
+    var fast = parseColor(css);
+    if (fast || !css) return fast;
+    try {
+      if (!probe) {
+        var c = document.createElement('canvas');
+        c.width = c.height = 1;
+        probe = c.getContext('2d', { willReadFrequently: true });
+      }
+      probe.clearRect(0, 0, 1, 1);
+      probe.fillStyle = '#000';
+      probe.fillStyle = css;
+      probe.fillRect(0, 0, 1, 1);
+      var d = probe.getImageData(0, 0, 1, 1).data;
+      return [d[0], d[1], d[2]];
+    } catch (e) { return null; }
+  }
   function mixColor(a, b, t) {
     return 'rgb(' + Math.round(lerp(a[0], b[0], t)) + ',' +
                     Math.round(lerp(a[1], b[1], t)) + ',' +
@@ -207,16 +229,37 @@
   // run once fonts are ready or the line boxes are wrong.
   function splitText(el, mode) {
     if (el.__scSplit) return el.__scSplit;
-    var text = el.textContent;
+    if (el.__scText === undefined) {
+      // Splitting rebuilds the element from its text, so a link, an <em> or a
+      // <br> inside it is gone after the first frame. Say so instead of letting
+      // it ship.
+      if (el.children.length) {
+        console.warn('[scrollcraft] kinetic split flattens the nested markup in "' +
+          el.textContent.trim().slice(0, 40) + '" (' +
+          Array.prototype.map.call(el.children, function (k) { return '<' + k.tagName.toLowerCase() + '>'; }).join(' ') +
+          '). Put data-sc-kinetic on a plain-text element.', el);
+      }
+      el.__scText = el.textContent;
+    }
+    var text = el.__scText;
     var units = [];
 
     if (mode === 'chars' || mode === 'words') {
       var parts = mode === 'chars' ? Array.from(text) : text.split(/(\s+)/);
       el.textContent = '';
+      // One span per character reads letter by letter in VoiceOver. Give
+      // assistive tech the sentence once and hide the pieces from it.
+      if (mode === 'chars') {
+        var sr = document.createElement('span');
+        sr.className = 'sc-sr-only';
+        sr.textContent = text;
+        el.appendChild(sr);
+      }
       parts.forEach(function (t) {
         if (/^\s+$/.test(t)) { el.appendChild(document.createTextNode(t)); return; }
         var mask = document.createElement('span');
         mask.className = 'sc-split';
+        if (mode === 'chars') mask.setAttribute('aria-hidden', 'true');
         var inner = document.createElement('span');
         inner.className = 'sc-split__i';
         inner.textContent = t;
@@ -261,6 +304,14 @@
     el.__scSplit = units;
     return units;
   }
+  // Puts the original text back so the next read splits it afresh. Line splits
+  // are measured, so they go stale whenever the face or the width changes.
+  function unsplit(el) {
+    if (!el.__scSplit) return;
+    el.textContent = el.__scText;
+    el.classList.remove('sc-is-split');
+    el.__scSplit = null;
+  }
 
   // ---- number formatting --------------------------------------------------
   function formatNum(v, template) {
@@ -290,6 +341,18 @@
     var y = 0, needsLayout = true;
     var progressBar = root.querySelector('[data-sc-progress]');
     var docEl = document.documentElement;
+    // Measured in layout(), never in read(). read() runs on every scroll frame
+    // right after writing styles, so any geometry it reads forces the browser
+    // to lay the whole page out again before it can answer.
+    var maxY = 1;
+    var splitW = vw;
+    // The ground the page starts on, so drift can ease away from it and hand
+    // it back when the reader scrolls above every drift act.
+    var baseCanvas = toRGB(getComputedStyle(docEl).getPropertyValue('--sc-canvas').trim());
+    // An author may set the ground inline on <html> themselves; restore that,
+    // not nothing, when drift lets go.
+    var inlineCanvas = docEl.style.getPropertyValue('--sc-canvas');
+    var canvasOut = null;
 
     // One rate for the page, overridable per clip. Read from the mount root, the
     // document element, or the option bag, in that order.
@@ -373,7 +436,7 @@
           kinetic: c.getAttribute('data-sc-kinetic'),
           units: null, state: -1
         };
-        if (cue.rOut === null) cue.rOut = (nums.length > 2 && !isNaN(nums[2])) ? 0.3 : 0.3;
+        if (cue.rOut === null) cue.rOut = 0.3;
         if (isNaN(cue.rise)) cue.rise = 1;
         act.cues.push(cue);
       });
@@ -409,7 +472,11 @@
       acts.push(act);
 
       var d = el.getAttribute('data-sc-drift');
-      if (d) { var rgb = parseColor(d); if (rgb) drifts.push({ act: act, rgb: rgb }); }
+      if (d) {
+        var rgb = toRGB(d);
+        if (rgb) drifts.push({ act: act, rgb: rgb });
+        else console.warn('[scrollcraft] data-sc-drift="' + d + '" is not a colour this browser can paint; ignored.', el);
+      }
     });
 
     // ---- collect worldflights --------------------------------------------
@@ -509,6 +576,13 @@
     // ---- layout -----------------------------------------------------------
     function layout() {
       vh = innerHeight; vw = innerWidth;
+      // A line split is a measurement of where the browser broke the text at
+      // one width. At any other width each line span wraps inside its own mask
+      // and the reveal staggers half-lines. Rebuild them; read() re-splits.
+      if (vw !== splitW) {
+        splitW = vw;
+        resetSplits('lines');
+      }
       acts.forEach(function (a) {
         if (a.pinned) a.el.style.height = (a.span * 100) + 'vh';
       });
@@ -525,7 +599,9 @@
         var r = a.el.getBoundingClientRect();
         a.top = r.top + scrollY;
         a.height = r.height;
+        if (a.rail) a.railOver = a.rail.scrollWidth - vw;
       });
+      maxY = Math.max((docEl.scrollHeight || 0) - vh, 1);
       if (acts.length) {
         acts.forEach(function (a) {
           if (a.seq && a.seq.el) {
@@ -533,7 +609,9 @@
             var dpr = Math.min(devicePixelRatio || 1, 2);
             a.seq.el.width = Math.round(box.width * dpr);
             a.seq.el.height = Math.round(box.height * dpr);
+            // Resizing a canvas clears it, so nothing is on it any more.
             a.seq.drawn = -1;
+            a.seq.shown = -1;
           }
         });
       }
@@ -576,25 +654,52 @@
       read();
     }
 
+    function resetSplits(mode) {
+      acts.forEach(function (a) {
+        a.cues.forEach(function (q) {
+          if (!q.kinetic || !q.units || (mode && q.kinetic !== mode)) return;
+          unsplit(q.el);
+          q.units = null;
+        });
+      });
+    }
+
+    // One layout per frame at most, however many observers ask for it.
+    var layoutQueued = false;
+    function scheduleLayout() {
+      if (layoutQueued) return;
+      layoutQueued = true;
+      requestAnimationFrame(function () { layoutQueued = false; layout(); });
+    }
+
     // ---- video ------------------------------------------------------------
     function loadVideo(a) { loadClip(a.video); }
     function loadClip(V) {
       // Under reduced motion the clip is never fetched. The poster holds the
       // frame and the copy still cues, so the page reads without the decode.
-      if (reduce || !V || V.loading) return;
-      var src = V.el.getAttribute('data-sc-src') ||
-                (isMobile() && V.el.getAttribute('data-sc-src-mobile')) ||
-                V.el.currentSrc || V.el.src;
-      if (isMobile() && V.el.getAttribute('data-sc-src-mobile')) src = V.el.getAttribute('data-sc-src-mobile');
+      if (reduce || !V || V.loading || V.failed) return;
+      // read() asks for every clip in range on every scroll frame, so a failed
+      // fetch must not simply clear `loading`: that turns one missing file into
+      // a request per frame for as long as the reader scrolls near it.
+      if (V.retryAt && performance.now() < V.retryAt) return;
+      var mobileSrc = isMobile() && V.el.getAttribute('data-sc-src-mobile');
+      var src = mobileSrc || V.el.getAttribute('data-sc-src') || V.el.currentSrc || V.el.src;
       if (!src) return;
       V.loading = true;
-      fetch(src).then(function (r) { if (!r.ok) throw new Error(r.status); return r.blob(); })
+      V.attempts = (V.attempts || 0) + 1;
+      fetch(src).then(function (r) {
+        if (!r.ok) { var err = new Error('HTTP ' + r.status); err.status = r.status; throw err; }
+        return r.blob();
+      })
         .then(function (blob) {
           // Listeners and preload BEFORE src. Assigning src starts the load, so
           // attaching afterwards and then calling load() restarts it and aborts
           // the first request (visible as ERR_ABORTED on the blob URL).
           V.el.addEventListener('loadedmetadata', function () {
             V.ready = true;
+            // A clip that arrives after the first touch missed the page-wide
+            // prime, and iOS would leave it blank. Give it its own.
+            if (primed) primeClip(V);
             // Force one seek even when the target is already 0. The reveal is
             // gated on a 'seeked' event, and the raf loop only seeks when the
             // time actually needs to change, so a clip sitting at the very top
@@ -614,7 +719,19 @@
           V.el.preload = 'auto';
           V.el.src = URL.createObjectURL(blob);
         })
-        .catch(function () { V.loading = false; });
+        .catch(function (err) {
+          V.loading = false;
+          // A 4xx will not fix itself. A dropped connection or a 5xx might, so
+          // those get two more tries, spaced out. The poster holds meanwhile.
+          var permanent = err && err.status >= 400 && err.status < 500;
+          if (permanent || V.attempts >= 3) {
+            V.failed = true;
+            console.warn('[scrollcraft] clip failed to load (' + (err && err.message) + '): ' + src +
+              '. The poster stays up.', V.el);
+          } else {
+            V.retryAt = performance.now() + 2000 * Math.pow(2, V.attempts - 1);
+          }
+        });
     }
 
     // ---- image sequence ---------------------------------------------------
@@ -629,24 +746,37 @@
                          .replace('{ii}', String(S.start + i).padStart(2, '0'))
                          .replace('{iii}', String(S.start + i).padStart(3, '0'))
                          .replace('{iiii}', String(S.start + i).padStart(4, '0'));
-          img.onload = function () { S.loaded++; if (S.loaded === 1) S.drawn = -1; };
+          // read() only runs on scroll, so a frame that lands while the reader
+          // is holding still would otherwise wait for the next wheel event to
+          // be drawn, and the stage sits blank in front of them.
+          img.onload = function () { S.loaded++; if (a.live) requestRead(); };
           S.frames[i] = img;
         })(i);
       }
     }
+    var isLoaded = function (img) { return img && img.complete && img.naturalWidth > 0; };
     function drawSeq(a) {
       var S = a.seq;
       if (!S || !S.frames.length) return;
       var idx = clamp(Math.round(a.p * (S.count - 1)), 0, S.count - 1);
       if (idx === S.drawn) return;
-      var img = S.frames[idx];
-      if (!img || !img.complete || !img.naturalWidth) return;
+      // The exact frame may still be in flight. The nearest one that has
+      // arrived is a better picture than an empty canvas; the exact frame
+      // replaces it as soon as it lands.
+      var use = -1;
+      for (var k = 0; k < S.count && use < 0; k++) {
+        if (isLoaded(S.frames[idx - k])) use = idx - k;
+        else if (isLoaded(S.frames[idx + k])) use = idx + k;
+      }
+      if (use < 0 || use === S.shown) return;
+      var img = S.frames[use];
       var cw = S.el.width, ch = S.el.height;
       // cover fit
       var scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
       var w = img.naturalWidth * scale, h = img.naturalHeight * scale;
       S.ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
-      S.drawn = idx;
+      S.shown = use;
+      S.drawn = use === idx ? idx : -1;
     }
 
     // ---- worldflight ------------------------------------------------------
@@ -755,7 +885,6 @@
     function read() {
       y = scrollY || pageYOffset;
       var driftA = null, driftB = null, driftT = 0;
-      var maxY = Math.max((document.documentElement.scrollHeight || 0) - vh, 1);
 
       for (var i = 0; i < acts.length; i++) {
         var a = acts[i];
@@ -789,7 +918,10 @@
           a.vp = a.dwell ? dwell(vraw, a.dwell) : vraw;
         }
         a.live = (y > a.top - vh * 1.25) && (y < a.top + a.height + vh * 1.25);
-        a.el.style.setProperty('--sc-p', a.p.toFixed(4));
+        // A custom property inherits, so writing one restyles the whole act.
+        // Most acts are parked at 0 or 1 on any given frame; skip those writes.
+        var pStr = a.p.toFixed(4);
+        if (pStr !== a.pStr) { a.el.style.setProperty('--sc-p', pStr); a.pStr = pStr; }
 
         // Fetch earlier than we drive. A 1080p clip is megabytes, and a reader
         // who scrolls briskly will otherwise arrive at a stage that is still
@@ -804,7 +936,7 @@
 
         // horizontal rail
         if (a.rail) {
-          var over = a.rail.scrollWidth - vw;
+          var over = a.railOver;
           if (over > 0) {
             var extra = over * (a.railExtra || 0);
             a.rail.style.transform = 'translate3d(' + (-(over + extra) * a.p).toFixed(2) + 'px,0,0)';
@@ -904,23 +1036,30 @@
 
       for (var w = 0; w < worlds.length; w++) readWorld(worlds[w]);
 
-      // background drift
+      // background drift. Each drift act eases the ground from the colour before
+      // it (the previous drift, or the page's own ground for the first one) to
+      // its own over the first third of its travel.
       for (var d = 0; d < drifts.length; d++) {
         var D = drifts[d];
         if (D.act.raw > 0 && D.act.raw < 1) {
           driftA = D; driftT = smooth(D.act.raw / 0.35);
-          driftB = drifts[d - 1] || D;
+          driftB = d > 0 ? drifts[d - 1].rgb : (baseCanvas || D.rgb);
           break;
         }
-        if (D.act.raw >= 1) { driftA = D; driftB = D; driftT = 1; }
+        if (D.act.raw >= 1) { driftA = D; driftB = D.rgb; driftT = 1; }
       }
-      if (driftA) {
-        docEl.style.setProperty('--sc-canvas', mixColor(driftB.rgb, driftA.rgb, driftT));
+      // Above every drift act the page is back on its own ground. Removing the
+      // inline value hands --sc-canvas back to the author's stylesheet, so a
+      // theme switch made while the reader was further down still applies.
+      var canvas = driftA ? mixColor(driftB, driftA.rgb, driftT) : inlineCanvas;
+      if (canvas !== canvasOut) {
+        if (canvas) docEl.style.setProperty('--sc-canvas', canvas);
+        else docEl.style.removeProperty('--sc-canvas');
+        canvasOut = canvas;
       }
 
       if (progressBar) {
-        var max = Math.max(document.body.scrollHeight - vh, 1);
-        progressBar.style.transform = 'scaleX(' + clamp01(y / max).toFixed(4) + ')';
+        progressBar.style.transform = 'scaleX(' + clamp01(y / maxY).toFixed(4) + ')';
       }
     }
 
@@ -953,16 +1092,17 @@
     // gesture, so a clip can be loaded, seeked and still show nothing. One
     // play-pause on the first touch unlocks every clip on the page at once.
     var primed = false;
+    function primeClip(V) {
+      try {
+        var pr = V.el.play();
+        if (pr && pr.then) pr.then(function () { V.el.pause(); }, function () {});
+        else V.el.pause();
+      } catch (e) {}
+    }
     function prime() {
       if (primed) return;
       primed = true;
-      playheads.forEach(function (V) {
-        try {
-          var pr = V.el.play();
-          if (pr && pr.then) pr.then(function () { V.el.pause(); }, function () {});
-          else V.el.pause();
-        } catch (e) {}
-      });
+      playheads.forEach(primeClip);
     }
     addEventListener('touchstart', prime, { passive: true, once: true });
     addEventListener('pointerdown', prime, { passive: true, once: true });
@@ -1022,7 +1162,16 @@
         for (var m = 0; m < magnets.length; m++) {
           var M = magnets[m];
           M.x += (M.tx - M.x) * 0.12; M.y += (M.ty - M.y) * 0.12;
-          M.el.style.transform = 'translate3d(' + M.x.toFixed(2) + 'px,' + M.y.toFixed(2) + 'px,0)';
+          // A magnet resting at zero is most of them, most of the time, and
+          // rewriting an identity transform every frame still costs a style
+          // recalc. Skip only that case. A displaced magnet must keep writing
+          // even when its value is unchanged: it usually shares the element
+          // with a cue, and read() overwrites the transform on every scroll.
+          var rest = M.tx === 0 && M.ty === 0 && Math.abs(M.x) < 0.01 && Math.abs(M.y) < 0.01;
+          if (!rest || !M.rested) {
+            M.el.style.transform = 'translate3d(' + M.x.toFixed(2) + 'px,' + M.y.toFixed(2) + 'px,0)';
+          }
+          M.rested = rest;
         }
         requestAnimationFrame(pointerTick);
       })();
@@ -1030,9 +1179,21 @@
 
     // ---- wiring -----------------------------------------------------------
     var ticking = false;
-    addEventListener('scroll', function () {
+    function requestRead() {
       if (!ticking) { ticking = true; requestAnimationFrame(function () { read(); ticking = false; }); }
-    }, { passive: true });
+    }
+    addEventListener('scroll', requestRead, { passive: true });
+
+    // Act geometry is measured, so anything that changes the page's height
+    // after mount moves every act below it: an image without dimensions, an
+    // embed, copy that loads late. None of that fires a resize event, and a
+    // stale `top` pins the act and cues its copy against the wrong stretch of
+    // scroll. Rails are watched too, because their travel is their width.
+    if ('ResizeObserver' in window) {
+      var ro = new ResizeObserver(scheduleLayout);
+      ro.observe(document.body);
+      acts.forEach(function (a) { if (a.rail) ro.observe(a.rail); });
+    }
 
     // Keyboard focus on a pinned or panning act. The browser's own
     // scroll-into-view parks the focused element barely on screen, which is
@@ -1065,14 +1226,16 @@
     if (document.fonts && document.fonts.ready) {
       // Line splitting measures line boxes, so it has to wait for the real face.
       document.fonts.ready.then(function () {
-        acts.forEach(function (a) { a.cues.forEach(function (q) { if (q.kinetic && q.units) { q.el.__scSplit = null; q.units = null; } }); });
+        resetSplits();
         layout();
       });
     }
 
     layout();
     initPointer();
-    requestAnimationFrame(tick);
+    // Every clip is registered during mount, so a page with none never needs
+    // the playhead loop at all.
+    if (playheads.length) requestAnimationFrame(tick);
     document.documentElement.classList.add('sc-ready');
 
     var api = { layout: layout, read: read, acts: acts, worlds: worlds, clips: playheads, lerp: LERP };
