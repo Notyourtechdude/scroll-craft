@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>scrollcraft · scroll-driven websites that hold a design standard</title>
+<meta name="description" content="A Claude Code skill that builds premium scroll-driven websites and checks its own work.">
+<style>
+:root{--bg:#0e0d0c;--fg:#f1ece4;--mut:#a8a096;--acc:#d97757;--line:#2a2724;--pad:clamp(20px,5vw,72px)}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font:400 17px/1.6 "Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:0 var(--pad)}
+nav{position:fixed;inset:0 0 auto;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:16px var(--pad);background:linear-gradient(var(--bg),transparent)}
+nav b{letter-spacing:.02em}
+.btn{display:inline-block;padding:12px 22px;border-radius:999px;background:var(--acc);color:#1a0f0a;font-weight:600;text-decoration:none;transition:transform .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn.ghost{background:none;color:var(--fg);border:1px solid var(--line)}
+header.hero{min-height:100svh;display:grid;align-content:center;padding:120px 0 80px}
+h1{font:600 clamp(2.6rem,8vw,6.4rem)/1.02 Georgia,"Times New Roman",serif;letter-spacing:-.03em;max-width:14ch}
+h1 em{color:var(--acc);font-style:italic}
+.lead{max-width:52ch;color:var(--mut);margin:28px 0 36px;font-size:1.15rem}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+section{padding:clamp(64px,10vw,140px) 0;border-top:1px solid var(--line)}
+h2{font:600 clamp(1.9rem,4.5vw,3.2rem)/1.1 Georgia,serif;letter-spacing:-.02em;max-width:20ch;margin-bottom:20px}
+.sub{color:var(--mut);max-width:56ch}
+.work{display:grid;gap:clamp(40px,8vw,100px);margin-top:56px}
+.work figure{display:grid;gap:18px}
+.work img{width:100%;height:auto;border-radius:12px;border:1px solid var(--line);transform:scale(.96);opacity:.4;transition:transform .8s cubic-bezier(.2,.7,.2,1),opacity .8s}
+.work figure.in img{transform:none;opacity:1}
+figcaption b{display:block;font:600 1.4rem Georgia,serif}
+figcaption span{color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:48px}
+.grid div{background:var(--bg);padding:28px}
+.grid h3{font-size:1.05rem;margin-bottom:8px;color:var(--acc)}
+.grid p{color:var(--mut);font-size:.97rem}
+pre{background:#161412;border:1px solid var(--line);border-radius:12px;padding:20px;overflow-x:auto;margin:16px 0;font:14px/1.7 ui-monospace,Menlo,monospace}
+.reveal{opacity:0;transform:translateY(24px);transition:.8s}
+.reveal.in{opacity:1;transform:none}
+footer{padding:48px 0;border-top:1px solid var(--line);color:var(--mut);font-size:.9rem}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}.reveal,.work img{opacity:1;transform:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<nav><b>scrollcraft</b><a class="btn ghost" href="https://github.com/nateherkai/scroll-craft">GitHub</a></nav>
+
+<header class="hero"><div class="wrap">
+  <h1>Scroll that <em>means</em> something.</h1>
+  <p class="lead">A Claude Code skill that builds premium scroll-driven websites and holds them to a real design standard, then tests its own work in a headless browser.</p>
+  <div class="row"><a class="btn" href="#install">Install the skill</a><a class="btn ghost" href="#work">See three builds</a></div>
+</div></header>
+
+<section id="work"><div class="wrap">
+  <h2>Three builds. No shared skeleton.</h2>
+  <p class="sub">Same skill, same engine. Different page grammars, navigation, and endings.</p>
+  <div class="work">
+    <figure><img src="orrery.webp" alt="Orrery, a continuous-world scroll flight" loading="lazy"><figcaption><b>Orrery</b><span>A travel practice. One unbroken world, no section boundaries.</span></figcaption></figure>
+    <figure><img src="perkform.webp" alt="PERKFORM, a filmic one-shot product page" loading="lazy"><figcaption><b>PERKFORM</b><span>A protein coffee. Filmic, loud, product-forward.</span></figcaption></figure>
+    <figure><img src="fallowbank.webp" alt="Fallowbank, a restrained documentary page" loading="lazy"><figcaption><b>Fallowbank</b><span>A landscape studio. Quiet, documentary, restrained.</span></figcaption></figure>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="reveal">Interaction and craft, as one job.</h2>
+  <div class="grid">
+    <div class="reveal"><h3>Scroll is the timeline</h3><p>Video scrubs under the wheel, sections pin while the argument advances, headlines assemble line by line.</p></div>
+    <div class="reveal"><h3>Eight page grammars</h3><p>Each one forbids what the others require, so two builds cannot quietly converge.</p></div>
+    <div class="reveal"><h3>A signature move</h3><p>Every build invents one interaction that exists on that site alone.</p></div>
+    <div class="reveal"><h3>Fingerprint gate</h3><p>A new build must differ from your past pages on at least 4 of 6 dimensions.</p></div>
+    <div class="reveal"><h3>One engineered peak</h3><p>The peak gets the budget, the silence before it, and the most scroll room.</p></div>
+    <div class="reveal"><h3>Typography and colour floor</h3><p>Two families, real measure, six colour roles, one accent, no pure black.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>It checks its own work.</h2>
+  <p class="sub">A headless browser walks the finished page at every scroll position and reports dead scroll, cues that never reach full opacity, contrast on the composited page, and clips stuck on a poster. Then it writes a contact sheet, because a machine can prove a page works and cannot tell you it means anything.</p>
+</div></section>
+
+<section id="install"><div class="wrap">
+  <h2>Install</h2>
+  <pre>/plugin marketplace add nateherkai/scroll-craft
+/plugin install nateherk-design</pre>
+  <p class="sub">Then describe what you want, or run <code>/nateherk-design:scrollcraft</code>.</p>
+  <div class="row" style="margin-top:28px"><a class="btn" href="https://github.com/nateherkai/scroll-craft">View on GitHub</a></div>
+</div></section>
+
+<footer><div class="wrap">MIT licensed · scrollcraft</div></footer>
+
+<script>
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.2});
+document.querySelectorAll('.reveal,.work figure').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
