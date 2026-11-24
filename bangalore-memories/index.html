@@ -38,7 +38,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opa
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>")}
 
 /* HERO */
-.hero{position:relative;height:100svh;min-height:620px;overflow:hidden;display:grid;align-items:end}
+.heroScrub{height:300vh;position:relative}
+.hero{position:sticky;top:0;height:100svh;min-height:620px;overflow:hidden;display:grid;align-items:end}
 .hero .media{position:absolute;inset:-4%;will-change:transform}
 .hero .media img,.hero .media video{width:100%;height:100%;object-fit:cover}
 .hero .media video{position:absolute;inset:0;opacity:0;transition:opacity 1.2s}
@@ -135,12 +136,13 @@ footer{padding:36px var(--pad);border-top:1px solid var(--line);color:var(--ink-
 <main id="top">
 
 <!-- 1. Arrival -->
-<section class="hero" id="hero">
+<section class="heroScrub" id="heroScrub">
+<div class="hero" id="hero">
   <div class="media" id="heroMedia">
     <img src="assets/biryani.jpg" alt="A copper handi of saffron dum biryani with steam rising">
-    <video id="heroVideo" muted loop playsinline preload="auto" poster="assets/biryani.jpg" aria-hidden="true"></video>
+    <video id="heroVideo" muted playsinline preload="auto" poster="assets/biryani.jpg" aria-hidden="true"></video>
   </div>
-  <div class="copy">
+  <div class="copy" id="heroCopy">
     <h1>Bangalore<br><em>Memories.</em></h1>
     <p>Dum biryani, charcoal kebabs and ghee rice from a kitchen in Deira that cooks the way home tastes.</p>
     <div class="row">
@@ -148,6 +150,7 @@ footer{padding:36px var(--pad);border-top:1px solid var(--line);color:var(--ink-
       <a class="btn ghost" href="#table">See the table</a>
     </div>
   </div>
+</div>
 </section>
 
 <!-- 2. Recognition -->
@@ -226,8 +229,8 @@ footer{padding:36px var(--pad);border-top:1px solid var(--line);color:var(--ink-
 </footer>
 
 <script>
-/* Generated hero clip (6s, 720p), served locally. The still image is the fallback if it cannot load. */
-window.HERO_VIDEO_SRC="assets/hero.mp4";
+/* Generated hero clip (6s, 720p), re-encoded with a keyframe every 3 frames so it scrubs smoothly. The still is the fallback. */
+window.HERO_VIDEO_SRC="assets/hero-scrub.mp4";
 (function(){
   "use strict";
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -243,12 +246,15 @@ window.HERO_VIDEO_SRC="assets/hero.mp4";
   /* hero video: generated clip, loaded from the CDN when reachable. The still stays as the fallback. */
   var hv=document.getElementById("heroVideo");
   var HERO_SRC=window.HERO_VIDEO_SRC||"";
+  var heroDur=0, heroCur=0;
   if(HERO_SRC && !reduce){
-    hv.src=HERO_SRC;
-    hv.addEventListener("canplay",function(){hv.classList.add("on");hv.play().catch(function(){})},{once:true});
+    hv.src=HERO_SRC; hv.pause();
+    hv.addEventListener("loadedmetadata",function(){heroDur=hv.duration||0});
+    hv.addEventListener("loadeddata",function(){hv.classList.add("on")},{once:true});
+    hv.load();
   }
 
-  var nav=document.getElementById("nav"), heroMedia=document.getElementById("heroMedia");
+  var nav=document.getElementById("nav"), heroMedia=document.getElementById("heroMedia"), heroScrubEl=document.getElementById("heroScrub"), heroCopy=document.getElementById("heroCopy");
   var proseEl=document.getElementById("prose"), lines=[].slice.call(document.querySelectorAll("#proseH span")), proseSub=document.getElementById("proseSub");
   var ringEl=document.getElementById("table"), car=document.getElementById("carousel"), faces=[].slice.call(car.children);
   var capT=document.getElementById("capT"), capD=document.getElementById("capD"), dots=[].slice.call(document.querySelectorAll("#dots i"));
@@ -275,8 +281,16 @@ window.HERO_VIDEO_SRC="assets/hero.mp4";
     nav.classList.toggle("solid",y>60);
 
     /* hero parallax + slow push */
-    var hp=clamp(y/innerHeight,0,1);
-    heroMedia.style.transform="translate3d(0,"+(hp*8)+"%,0) scale("+(1+hp*.12)+")";
+    var hp=prog(heroScrubEl);
+    if(heroDur>0){
+      var target=hp*(heroDur-.05);
+      heroCur+=(target-heroCur)*.2;
+      if(Math.abs(hv.currentTime-heroCur)>.02)hv.currentTime=heroCur;
+    }
+    heroMedia.style.transform="scale("+(1+hp*.05)+")";
+    var cf=1-clamp((hp-.5)/.3,0,1);
+    heroCopy.style.opacity=cf;
+    heroCopy.style.transform="translateY("+((1-cf)*-40)+"px)";
 
     /* prose: lines assemble */
     var p=prog(proseEl);
