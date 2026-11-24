@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bangalore Memories · Home cooking in Deira, Dubai</title>
+<meta name="description" content="Bangalore Memories Restaurant, Deira, Dubai. Dum biryani, charcoal kebabs and ghee rice, cooked the way home tastes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#0c0806; --surface:#17100c; --ink:#f3e6d3; --ink-soft:#a99887;
+  --saffron:#e2933a; --chilli:#b6402a; --line:#2b1f18;
+  --display:"Fraunces",Georgia,serif; --text:"Hanken Grotesk",system-ui,sans-serif;
+  --pad:clamp(20px,5vw,80px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--canvas)}
+body{background:var(--canvas);color:var(--ink);font:400 17px/1.65 var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img,video{display:block;max-width:100%}
+a{color:inherit}
+h1,h2,h3{font-family:var(--display);font-weight:500;letter-spacing:-.025em;line-height:1.02}
+.btn{display:inline-block;padding:14px 26px;border-radius:999px;background:var(--saffron);color:#1b1008;font-weight:600;text-decoration:none;transition:transform .25s,box-shadow .25s;box-shadow:0 6px 0 #8a5516}
+.btn:hover{transform:translateY(-3px);box-shadow:0 9px 0 #8a5516}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px #5a4636}
+.btn.ghost:hover{box-shadow:inset 0 0 0 1px var(--saffron)}
+:focus-visible{outline:2px solid var(--saffron);outline-offset:3px}
+
+/* nav */
+nav{position:fixed;inset:0 0 auto;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:18px var(--pad);transition:background .4s}
+nav.solid{background:rgba(12,8,6,.82);backdrop-filter:blur(10px)}
+nav .logo{font:italic 500 1.35rem var(--display);text-decoration:none}
+nav .btn{padding:10px 20px;box-shadow:none;font-size:.92rem}
+
+/* grain over everything */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.07;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>")}
+
+/* HERO */
+.hero{position:relative;height:100svh;min-height:620px;overflow:hidden;display:grid;align-items:end}
+.hero .media{position:absolute;inset:-4%;will-change:transform}
+.hero .media img,.hero .media video{width:100%;height:100%;object-fit:cover}
+.hero .media video{position:absolute;inset:0;opacity:0;transition:opacity 1.2s}
+.hero .media video.on{opacity:1}
+.hero::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(0deg,rgba(12,8,6,.96) 0%,rgba(12,8,6,.55) 38%,rgba(12,8,6,.15) 70%),radial-gradient(120% 80% at 20% 100%,rgba(12,8,6,.8),transparent 60%)}
+.hero .copy{position:relative;z-index:2;padding:0 var(--pad) clamp(48px,9vh,110px);max-width:1200px}
+.hero h1{font-size:clamp(3rem,10vw,8.6rem);font-weight:700}
+.hero h1 em{font-style:italic;color:var(--saffron);font-weight:500}
+.hero p{max-width:46ch;margin:22px 0 32px;color:#d8c8b4;font-size:1.15rem}
+.hero .row{display:flex;gap:14px;flex-wrap:wrap}
+
+/* PROSE (pinned, lines assemble) */
+.prose{height:260vh;position:relative}
+.prose .stick{position:sticky;top:0;height:100svh;display:grid;align-content:center;padding:0 var(--pad)}
+.prose h2{font-size:clamp(2.2rem,6.4vw,5.6rem);max-width:17ch}
+.prose h2 span{display:block;opacity:.12;transform:translateY(18px);transition:opacity .5s,transform .5s}
+.prose h2 span.on{opacity:1;transform:none}
+.prose h2 span.hot{color:var(--saffron);font-style:italic}
+.prose .sub{margin-top:36px;max-width:44ch;color:var(--ink-soft);opacity:0;transition:opacity .8s}
+.prose .sub.on{opacity:1}
+
+/* RING (3D carousel driven by scroll) */
+.ring{height:420vh;position:relative;background:radial-gradient(80% 60% at 50% 40%,#1d130d,var(--canvas))}
+.ring .stick{position:sticky;top:0;height:100svh;overflow:hidden;display:grid;grid-template-rows:auto 1fr auto;padding:clamp(70px,10vh,110px) var(--pad) clamp(28px,6vh,60px)}
+.ring header h2{font-size:clamp(1.9rem,4.6vw,3.6rem);max-width:18ch}
+.stage{perspective:1400px;display:grid;place-items:center;min-height:0}
+.carousel{position:relative;width:min(56vw,620px);aspect-ratio:16/10;transform-style:preserve-3d;will-change:transform}
+.face{position:absolute;inset:0;border-radius:18px;overflow:hidden;backface-visibility:hidden;box-shadow:0 40px 80px -30px #000,0 0 0 1px #3a2a1f;transition:filter .5s}
+.face img{width:100%;height:100%;object-fit:cover}
+.face.dim{filter:brightness(.45) saturate(.8)}
+.caption{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end}
+.caption h3{font-size:clamp(1.6rem,3.4vw,2.6rem);color:var(--saffron);min-height:1.1em;transition:opacity .3s}
+.caption p{color:var(--ink-soft);max-width:48ch;min-height:3.3em;transition:opacity .3s}
+.dots{display:flex;gap:8px;padding-bottom:8px}
+.dots i{width:28px;height:3px;background:#4a392c;border-radius:2px;transition:background .3s}
+.dots i.on{background:var(--saffron)}
+
+/* PEAK: open the handi */
+.peak{height:340vh;position:relative}
+.peak .stick{position:sticky;top:0;height:100svh;overflow:hidden;display:grid;place-items:center}
+.peak .plate{position:absolute;inset:0;will-change:transform,clip-path;clip-path:inset(18% 22% 18% 22% round 20px)}
+.peak .plate img{width:100%;height:100%;object-fit:cover;transform-origin:50% 62%}
+.peak .veil{position:absolute;inset:0;background:radial-gradient(70% 60% at 50% 55%,transparent,rgba(12,8,6,.85));pointer-events:none}
+.peak canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;mix-blend-mode:screen}
+.peak .words{position:relative;z-index:3;text-align:center;padding:0 var(--pad);pointer-events:none}
+.peak .words::before{content:"";position:absolute;inset:-30% -10%;z-index:-1;background:radial-gradient(closest-side,rgba(12,8,6,.78),rgba(12,8,6,.35) 60%,transparent)}
+.peak h2{font-size:clamp(3rem,11vw,9.5rem);font-weight:700;word-spacing:.12em;letter-spacing:-.01em;text-shadow:0 6px 40px rgba(0,0,0,.85)}
+.peak h2 em{color:var(--saffron);font-style:italic;font-weight:500}
+.peak .words p{margin-top:14px;color:#e6d6c0;font-size:1.1rem;text-shadow:0 2px 20px #000}
+.peak .hint{position:absolute;bottom:6vh;left:0;right:0;text-align:center;z-index:3;color:var(--ink-soft);font-size:.95rem;transition:opacity .6s}
+
+/* HOME (horizontal rail) */
+.home{height:300vh;position:relative}
+.home .stick{position:sticky;top:0;height:100svh;overflow:hidden;display:grid;align-content:center;gap:clamp(20px,4vh,40px)}
+.home h2{font-size:clamp(2rem,5vw,4rem);padding:0 var(--pad);max-width:20ch}
+.rail{display:flex;gap:clamp(18px,3vw,40px);padding:0 var(--pad);will-change:transform}
+.card{flex:0 0 clamp(280px,38vw,520px);transform-style:preserve-3d;transition:transform .25s ease-out}
+.card .inner{border-radius:16px;overflow:hidden;background:var(--surface);box-shadow:0 30px 60px -25px #000,0 0 0 1px #33261c;transform:translateZ(0)}
+.card img{width:100%;aspect-ratio:4/3;object-fit:cover}
+.card .t{padding:20px 22px 24px}
+.card h3{font-size:1.5rem;margin-bottom:6px}
+.card p{color:var(--ink-soft);font-size:.98rem}
+.card .glare{position:absolute;inset:0;border-radius:16px;pointer-events:none;background:radial-gradient(circle at var(--gx,50%) var(--gy,0%),rgba(255,214,150,.22),transparent 55%);opacity:0;transition:opacity .3s}
+.card:hover .glare{opacity:1}
+.card{position:relative;perspective:900px}
+
+/* CLOSE */
+.close{position:relative;min-height:100svh;display:grid;align-content:center;justify-items:start;padding:120px var(--pad);overflow:hidden;background:linear-gradient(180deg,var(--canvas),#160d08)}
+.close::after{content:"";position:absolute;right:-8%;bottom:-18%;width:min(70vw,780px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(226,147,58,.22),transparent 65%);pointer-events:none}
+.close h2{font-size:clamp(3rem,10vw,8.4rem);font-weight:700}
+.close h2 em{color:var(--saffron);font-style:italic;font-weight:500}
+.close p{max-width:46ch;margin:22px 0 34px;color:#d8c8b4;font-size:1.15rem}
+.close .row{display:flex;gap:14px;flex-wrap:wrap;position:relative;z-index:1}
+footer{padding:36px var(--pad);border-top:1px solid var(--line);color:var(--ink-soft);font-size:.9rem;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media(max-width:760px){
+  .carousel{width:84vw}
+  .caption{grid-template-columns:1fr}
+  .peak .plate{clip-path:inset(26% 8% 26% 8% round 16px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .prose h2 span,.prose .sub{opacity:1;transform:none}
+  .hero .media video{display:none}
+}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a class="logo" href="#top">Bangalore Memories</a>
+  <a class="btn" href="#visit">Visit us</a>
+</nav>
+
+<main id="top">
+
+<!-- 1. Arrival -->
+<section class="hero" id="hero">
+  <div class="media" id="heroMedia">
+    <img src="assets/biryani.jpg" alt="A copper handi of saffron dum biryani with steam rising">
+    <video id="heroVideo" muted loop playsinline preload="auto" poster="assets/biryani.jpg" aria-hidden="true"></video>
+  </div>
+  <div class="copy">
+    <h1>Bangalore<br><em>Memories.</em></h1>
+    <p>Dum biryani, charcoal kebabs and ghee rice from a kitchen in Deira that cooks the way home tastes.</p>
+    <div class="row">
+      <a class="btn" href="#visit">Find us in Deira</a>
+      <a class="btn ghost" href="#table">See the table</a>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Recognition -->
+<section class="prose" id="prose">
+  <div class="stick">
+    <h2 id="proseH">
+      <span>Some food tastes</span>
+      <span>like a place</span>
+      <span class="hot">you left.</span>
+    </h2>
+    <p class="sub" id="proseSub">Slow pots, whole spices and rice that carries the smell of the kitchen before you see the plate. That is what we are cooking, one handi at a time.</p>
+  </div>
+</section>
+
+<!-- 3. The table: 3D ring -->
+<section class="ring" id="table">
+  <div class="stick">
+    <header><h2>Four things worth turning the table for.</h2></header>
+    <div class="stage">
+      <div class="carousel" id="carousel">
+        <figure class="face" data-t="Dum biryani" data-d="Saffron rice and spiced meat sealed in a copper handi and cooked on its own steam."><img src="assets/biryani.jpg" alt="Dum biryani in a copper handi"></figure>
+        <figure class="face" data-t="Charcoal kebabs" data-d="Seekh kebabs turned over live embers until the edges char and the fat runs."><img src="assets/kebab.jpg" alt="Seekh kebabs on skewers over charcoal"></figure>
+        <figure class="face" data-t="Ghee rice and curry" data-d="Golden ghee rice with a glossy red curry, the way a family table is laid."><img src="assets/feast.jpg" alt="Ghee rice, chicken curry and sides on a dark table"></figure>
+        <figure class="face" data-t="Chai at the end" data-d="Something hot and sweet to finish, poured slow, while the table is still talking."><img src="assets/chai.jpg" alt="Masala chai poured into a glass"></figure>
+      </div>
+    </div>
+    <div class="caption">
+      <div><h3 id="capT">Dum biryani</h3><p id="capD"></p></div>
+      <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Peak -->
+<section class="peak" id="peak">
+  <div class="stick">
+    <div class="plate" id="plate"><img src="assets/biryani.jpg" alt=""></div>
+    <div class="veil"></div>
+    <canvas id="steam"></canvas>
+    <div class="words" id="peakWords">
+      <h2>Open the <em>handi.</em></h2>
+      <p>Lift the lid. Breathe in.</p>
+    </div>
+    <div class="hint" id="peakHint">Move your cursor through the steam.</div>
+  </div>
+</section>
+
+<!-- 5. Home -->
+<section class="home" id="home">
+  <div class="stick">
+    <h2>It should feel like walking into someone's home.</h2>
+    <div class="rail" id="rail">
+      <article class="card"><div class="inner"><img src="assets/feast.jpg" alt="A laid family table with rice, curry and sides" loading="lazy"><div class="t"><h3>Come to the table</h3><p>Rice, curry and small bowls of everything else, all within reach.</p></div></div><div class="glare"></div></article>
+      <article class="card"><div class="inner"><img src="assets/kebab.jpg" alt="Kebabs cooking over charcoal" loading="lazy"><div class="t"><h3>Fire first</h3><p>Charcoal does what a pan cannot. You can smell it from the street.</p></div></div><div class="glare"></div></article>
+      <article class="card"><div class="inner"><img src="assets/chai.jpg" alt="Chai poured from a steel kettle" loading="lazy"><div class="t"><h3>Stay a while</h3><p>Nobody here is in a hurry to clear the table.</p></div></div><div class="glare"></div></article>
+      <article class="card"><div class="inner"><img src="assets/biryani.jpg" alt="Biryani with fried onions and mint" loading="lazy"><div class="t"><h3>Bangalore, remembered</h3><p>Flavours carried across the sea and cooked again in Deira.</p></div></div><div class="glare"></div></article>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Close -->
+<section class="close" id="visit">
+  <h2>Come <em>hungry.</em></h2>
+  <p>Bangalore Memories Restaurant is in Deira, Dubai. Order for delivery, or come and sit down.</p>
+  <div class="row">
+    <!-- TODO: replace with the venue's confirmed address, phone and hours -->
+    <a class="btn" href="https://deliveroo.ae/en/menu/dubai/deira/bangalore-memories-restaurant-deira" rel="noopener">Order on Deliveroo</a>
+    <a class="btn ghost" href="https://www.google.com/maps/search/?api=1&query=Bangalore+Memories+Restaurant+Deira+Dubai" rel="noopener">Open in Maps</a>
+  </div>
+</section>
+</main>
+
+<footer>
+  <span>Bangalore Memories Restaurant, Deira, Dubai</span>
+  <span>Food imagery is illustrative.</span>
+</footer>
+
+<script>
+/* Generated hero clip (6s, 720p). Hosted on the generator's CDN; the still image is the fallback if it cannot load.
+   For production, download this MP4 into assets/ and point this at "assets/hero.mp4". */
+window.HERO_VIDEO_SRC="https://cdn.creativeclaw.co/u/582d1e12/videos/717fea3e-5c8e-4552-85df-a3671a60a3f3.mp4";
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var clamp=function(v,a,b){return Math.min(b,Math.max(a,v))};
+  var ease=function(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2};
+
+  /* progress of a tall section: 0 when its top hits viewport top, 1 when its end hits viewport bottom */
+  function prog(el){
+    var r=el.getBoundingClientRect(), total=r.height-innerHeight;
+    return total>0?clamp(-r.top/total,0,1):0;
+  }
+
+  /* hero video: generated clip, loaded from the CDN when reachable. The still stays as the fallback. */
+  var hv=document.getElementById("heroVideo");
+  var HERO_SRC=window.HERO_VIDEO_SRC||"";
+  if(HERO_SRC && !reduce){
+    hv.src=HERO_SRC;
+    hv.addEventListener("canplay",function(){hv.classList.add("on");hv.play().catch(function(){})},{once:true});
+  }
+
+  var nav=document.getElementById("nav"), heroMedia=document.getElementById("heroMedia");
+  var proseEl=document.getElementById("prose"), lines=[].slice.call(document.querySelectorAll("#proseH span")), proseSub=document.getElementById("proseSub");
+  var ringEl=document.getElementById("table"), car=document.getElementById("carousel"), faces=[].slice.call(car.children);
+  var capT=document.getElementById("capT"), capD=document.getElementById("capD"), dots=[].slice.call(document.querySelectorAll("#dots i"));
+  var peakEl=document.getElementById("peak"), plate=document.getElementById("plate"), plateImg=plate.querySelector("img"), words=document.getElementById("peakWords"), hint=document.getElementById("peakHint");
+  var homeEl=document.getElementById("home"), rail=document.getElementById("rail");
+
+  var N=faces.length, step=360/N, lastIdx=-1, radius=0;
+  function layoutRing(){
+    var w=faces[0].offsetWidth;
+    radius=Math.round((w/2)/Math.tan(Math.PI/N))+Math.round(w*.18);
+    faces.forEach(function(f,i){f.style.transform="rotateY("+(i*step)+"deg) translateZ("+radius+"px)"});
+  }
+
+  function setCaption(i){
+    if(i===lastIdx)return; lastIdx=i;
+    var f=faces[i];
+    capT.style.opacity=0; capD.style.opacity=0;
+    setTimeout(function(){capT.textContent=f.dataset.t;capD.textContent=f.dataset.d;capT.style.opacity=1;capD.style.opacity=1},160);
+    dots.forEach(function(d,k){d.classList.toggle("on",k===i)});
+  }
+
+  function frame(){
+    var y=scrollY;
+    nav.classList.toggle("solid",y>60);
+
+    /* hero parallax + slow push */
+    var hp=clamp(y/innerHeight,0,1);
+    heroMedia.style.transform="translate3d(0,"+(hp*8)+"%,0) scale("+(1+hp*.12)+")";
+
+    /* prose: lines assemble */
+    var p=prog(proseEl);
+    lines.forEach(function(l,i){l.classList.toggle("on",p>.12+i*.2)});
+    proseSub.classList.toggle("on",p>.72);
+
+    /* ring: rotate with scroll, settle on each face */
+    var rp=prog(ringEl), raw=rp*(N-1), idx=Math.round(raw);
+    var eased=Math.floor(raw)+ease(raw-Math.floor(raw));
+    if(rp>=1)eased=N-1;
+    var ang=-eased*step;
+    car.style.transform="translateZ("+(-radius)+"px) rotateY("+ang+"deg) rotateX("+(Math.sin(rp*Math.PI)*-4)+"deg)";
+    faces.forEach(function(f,i){f.classList.toggle("dim",i!==idx)});
+    setCaption(clamp(idx,0,N-1));
+
+    /* peak: the frame opens to fill the screen, then pushes into the rice */
+    var pk=prog(peakEl), open=ease(clamp(pk/.55,0,1)), push=clamp((pk-.4)/.6,0,1);
+    var inset=18*(1-open), inX=22*(1-open);
+    plate.style.clipPath="inset("+inset+"% "+inX+"% "+inset+"% "+inX+"% round "+(20*(1-open))+"px)";
+    plateImg.style.transform="scale("+(1+push*.55)+") translateY("+(push*-4)+"%)";
+    words.style.opacity=clamp((pk-.18)/.2,0,1)*(1-clamp((pk-.88)/.12,0,1));
+    words.style.transform="translateY("+((1-clamp((pk-.18)/.3,0,1))*40)+"px)";
+    hint.style.opacity=pk>.25&&pk<.9?1:0;
+    steamBoost=.4+open*1.2;
+
+    /* home rail: pans sideways */
+    var hpg=prog(homeEl), max=rail.scrollWidth-innerWidth+parseFloat(getComputedStyle(rail).paddingLeft)*2;
+    rail.style.transform="translate3d("+(-Math.max(0,max)*ease(hpg))+"px,0,0)";
+
+    if(!reduce)requestAnimationFrame(frame);
+  }
+
+  /* pointer: tilt cards with glare */
+  [].forEach.call(document.querySelectorAll(".card"),function(c){
+    var inner=c.querySelector(".inner");
+    c.addEventListener("pointermove",function(e){
+      if(reduce)return;
+      var r=c.getBoundingClientRect(), x=(e.clientX-r.left)/r.width, yy=(e.clientY-r.top)/r.height;
+      inner.style.transform="rotateY("+((x-.5)*14)+"deg) rotateX("+((.5-yy)*12)+"deg) translateZ(18px)";
+      c.style.setProperty("--gx",x*100+"%");c.style.setProperty("--gy",yy*100+"%");
+    });
+    c.addEventListener("pointerleave",function(){inner.style.transform="translateZ(0)"});
+  });
+
+  /* steam: soft smoke wisps that rise from the pot and from the cursor */
+  var cv=document.getElementById("steam"), ctx=cv.getContext("2d"), parts=[], mx=-999,my=-999, steamBoost=1, dpr=1;
+  function size(){dpr=Math.min(devicePixelRatio||1,2);cv.width=cv.clientWidth*dpr;cv.height=cv.clientHeight*dpr}
+  function spawn(x,y,s){parts.push({x:x,y:y,vx:(Math.random()-.5)*.25,vy:-(.35+Math.random()*.6),r:(16+Math.random()*26)*s,a:.0,life:0,max:170+Math.random()*120,sw:Math.random()*6.28})}
+  peakEl.addEventListener("pointermove",function(e){var r=cv.getBoundingClientRect();mx=(e.clientX-r.left)*dpr;my=(e.clientY-r.top)*dpr;if(!reduce&&Math.random()<.7)spawn(mx,my,dpr*1.3)});
+  function steamLoop(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    var r=peakEl.getBoundingClientRect();
+    if(r.bottom>0&&r.top<innerHeight){
+      if(Math.random()<.35*steamBoost)spawn(cv.width*(.42+Math.random()*.16),cv.height*(.52+Math.random()*.06),dpr);
+      for(var i=parts.length-1;i>=0;i--){
+        var p=parts[i];p.life++;p.sw+=.02;p.x+=p.vx+Math.sin(p.sw)*.35*dpr;p.y+=p.vy*dpr;p.r+=.22*dpr;
+        var t=p.life/p.max;p.a=Math.sin(Math.PI*clamp(t,0,1))*.16;
+        if(t>=1){parts.splice(i,1);continue}
+        var g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
+        g.addColorStop(0,"rgba(255,236,208,"+p.a+")");g.addColorStop(1,"rgba(255,236,208,0)");
+        ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.283);ctx.fill();
+      }
+      if(parts.length>260)parts.splice(0,parts.length-260);
+    }
+    if(!reduce)requestAnimationFrame(steamLoop);
+  }
+
+  function init(){
+    size();layoutRing();
+    addEventListener("resize",function(){size();layoutRing()});
+    frame();
+    if(!reduce)steamLoop();else{lines.forEach(function(l){l.classList.add("on")});proseSub.classList.add("on")}
+    if(reduce){addEventListener("scroll",function(){requestAnimationFrame(frame)},{passive:true})}
+  }
+  if(document.readyState==="complete")init();else addEventListener("load",init);
+})();
+</script>
+</body>
+</html>
